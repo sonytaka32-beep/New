@@ -36,8 +36,8 @@
   $('historyBtn').addEventListener('click',()=>{renderHistory();open('historyOverlay')});$('clearHistory').addEventListener('click',()=>{history=[];save();renderHistory();showToast('Riwayat dihapus')});$('settingsBtn').addEventListener('click',()=>open('settingsOverlay'));
   
   // =====================================================================
-  // PRO ENGINE V3: NARUTO STORM 4 SUSANOO CHAKRA & ANATOMICAL 3D RIBCAGE
-  // Sharp cel-shaded flame tongues, 3D wrapping ribs, & chakra lightning
+  // FIXED: PRO ENGINE V4: NARUTO STORM 4 CHAKRA & ANATOMICAL 3D RIBCAGE
+  // Volumetric plasma, correct particle life, zero-collision error safety.
   // =====================================================================
   function startChakraFlames(){
     const canvas=$('chakraCanvas');
@@ -59,13 +59,11 @@
       }
       reset(isInit) {
         const c = getCenter();
-        // Spawn mengikuti kontur oval siluet Susanoo & tulang rusuk
         const side = Math.random() < 0.5 ? -1 : 1;
-        const t = Math.random(); // 0 (bawah) ke 1 (atas)
+        const t = Math.random(); 
         
-        // Kontur lebar Susanoo (lebar di bahu/tengah, menyempit di atas & bawah)
         const contourW = Math.sin(t * Math.PI) * (w * 0.19) + (w * 0.04);
-        const edgeBias = 0.55 + Math.random() * 0.55; // Fokus di tepi luar tubuh Susanoo
+        const edgeBias = 0.55 + Math.random() * 0.55; 
         
         this.x = c.x + side * contourW * edgeBias;
         this.y = (c.y + h * 0.34) - t * (h * 0.72);
@@ -124,13 +122,14 @@
         // Lapis 2: Inner White-Hot Chakra Core (Inti api tajam)
         const coreW = curW * 0.42;
         const coreH = curH * 0.68;
-        const ctx = bx + wave1 * 0.65;
-        const cty = by - coreH;
+        // BUGFIX TERPECAHKAN: Mengubah "ctx" ke "coreX" untuk menghindari overwriting context canvas 2D
+        const coreX = bx + wave1 * 0.65;
+        const coreY = by - coreH;
 
         ctx.fillStyle = `rgba(225, 255, 240, ${alpha * 0.7})`;
         ctx.beginPath();
         ctx.moveTo(bx - coreW, by);
-        ctx.quadraticCurveTo(bx + wave2 * 0.5, by - coreH * 0.5, ctx, cty);
+        ctx.quadraticCurveTo(bx + wave2 * 0.5, by - coreH * 0.5, coreX, coreY);
         ctx.quadraticCurveTo(bx + wave2 * 0.5, by - coreH * 0.5, bx + coreW, by);
         ctx.closePath();
         ctx.fill();
@@ -319,7 +318,6 @@
 
     // 5. KILATAN PETIR CHAKRA (STORM CHAKRA LIGHTNING ARCS)
     function drawChakraLightning(time) {
-      // Berkedip secara acak seperti kelebihan muatan chakra di game Storm
       if (Math.sin(time * 0.037) < 0.25 && Math.cos(time * 0.019) < 0.4) return;
       const c = getCenter();
       const side = Math.sin(time * 0.09) > 0 ? 1 : -1;
