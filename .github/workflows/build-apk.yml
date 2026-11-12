@@ -51,6 +51,8 @@ jobs:
           cp -r ../assets www/
           # Copy config.xml (will override the default one)
           cp ../config.xml .
+          # Copy res folder (icons, etc.) to project root
+          cp -r ../res .
           # Add Android platform and build
           cordova platform add android@13.0.0
           cordova build android --debug
