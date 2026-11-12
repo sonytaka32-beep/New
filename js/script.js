@@ -2,7 +2,7 @@
   'use strict';
   const $ = id => document.getElementById(id);
   const display = $('display'), expressionLine = $('expression');
-  const HISTORY_KEY = 'shisui-calc-history-v2', SETTINGS_KEY = 'shisui-calc-settings-v3';
+  const HISTORY_KEY = 'shisui-calc-history-v2', SETTINGS_KEY = 'shisui-calc-settings-v4';
   let input = '0', justEvaluated = false, soundOn = true, scientific = false, angle = 'DEG';
   let history = load(HISTORY_KEY, []), settings = load(SETTINGS_KEY, {theme:'shisui',sound:true,scientific:false,angle:'DEG'});
   function load(key, fallback){try{return JSON.parse(localStorage.getItem(key)) ?? fallback}catch{return fallback}}
@@ -34,61 +34,101 @@
   function open(id){$(id).hidden=false}function close(id){$(id).hidden=true}document.querySelectorAll('[data-close]').forEach(b=>b.addEventListener('click',()=>close(b.dataset.close)));document.querySelectorAll('.overlay').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)close(o.id)}));
   function renderHistory(){const box=$('historyList');box.innerHTML='';if(!history.length){box.innerHTML='<div class="history-empty">Belum ada perhitungan tersimpan.</div>';return}history.forEach((h,i)=>{const item=document.createElement('div');item.className='history-item';const small=document.createElement('small');small.textContent=h.time+' · '+h.expression;const strong=document.createElement('strong');strong.textContent='= '+h.result;item.append(small,strong);item.addEventListener('click',()=>{input=h.result;expressionLine.textContent=h.expression+' =';justEvaluated=true;render();close('historyOverlay')});box.append(item)})}
   $('historyBtn').addEventListener('click',()=>{renderHistory();open('historyOverlay')});$('clearHistory').addEventListener('click',()=>{history=[];save();renderHistory();showToast('Riwayat dihapus')});$('settingsBtn').addEventListener('click',()=>open('settingsOverlay'));
-  // Lightweight Susanoo chakra flames: local canvas only, no network or libraries.
+  // Living Susanoo: high-visibility chakra flames drawn locally on Canvas.
+  // Canvas is a sibling above the hero vignette so WebView stacking cannot hide it.
   function startChakraFlames(){
     const canvas=$('chakraCanvas');
-    if(!canvas || window.matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+    if(!canvas)return;
     const ctx=canvas.getContext('2d');
     if(!ctx)return;
-    let width=0,height=0,raf=0,last=0,particles=[];
-    const colors=['#38ff9a','#a6ffd4','#19d77b','#e0fff0'];
-    function resize(){
-      const rect=canvas.getBoundingClientRect();
-      const dpr=Math.min(window.devicePixelRatio||1,1.5);
-      width=Math.max(1,rect.width);height=Math.max(1,rect.height);
-      canvas.width=Math.round(width*dpr);canvas.height=Math.round(height*dpr);
-      ctx.setTransform(dpr,0,0,dpr,0,0);
-      particles=Array.from({length:46},()=>spawn(true));
+    const reduced=window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const colors=['#13ff83','#5bffb0','#c4ffe5','#00d878','#edfff6'];
+    let w=0,h=0,dpr=1,raf=0,last=0,particles=[],phase=0;
+    function point(a,rx,ry,scale=1){
+      return {x:w*.72+Math.cos(a)*rx*scale,y:h*.55+Math.sin(a)*ry*scale};
     }
     function spawn(initial=false){
-      // Flame ring follows the outer silhouette of the Susanoo on the right.
       const a=Math.random()*Math.PI*2;
-      const rx=width*.225,ry=height*.385;
-      return {x:width*.72+Math.cos(a)*rx,y:height*.59+Math.sin(a)*ry,
-        vx:(Math.random()-.5)*.42,vy:-(.45+Math.random()*1.05),
-        life:initial?Math.random():0,max:.65+Math.random()*.9,
-        size:1+Math.random()*2.5,phase:Math.random()*6.28,
+      const q=point(a,w*.255,h*.435,1.02+Math.random()*.08);
+      return {x:q.x,y:q.y,vx:(Math.random()-.5)*.65,vy:-(.35+Math.random()*1.25),
+        age:initial?Math.random()*.9:0,life:.7+Math.random()*1.25,
+        size:1.4+Math.random()*3.1,phase:Math.random()*Math.PI*2,
         color:colors[(Math.random()*colors.length)|0]};
+    }
+    function resize(){
+      const r=canvas.getBoundingClientRect();
+      w=Math.max(1,r.width);h=Math.max(1,r.height);
+      dpr=Math.min(window.devicePixelRatio||1,1.25);
+      canvas.width=Math.round(w*dpr);canvas.height=Math.round(h*dpr);
+      ctx.setTransform(dpr,0,0,dpr,0,0);
+      particles=Array.from({length:reduced?42:86},()=>spawn(true));
+    }
+    function flame(a,t,index){
+      const pulse=1+Math.sin(t*.003+index*1.7)*.09;
+      const base=point(a,w*.245,h*.425,pulse);
+      const tip=point(a+Math.sin(t*.002+index)*.12,w*.245,h*.425,1.12+(.12+.12*Math.sin(t*.006+index)));
+      const tangent={x:-Math.sin(a),y:Math.cos(a)};
+      const spread=7+Math.sin(t*.005+index)*3;
+      ctx.beginPath();ctx.moveTo(base.x-tangent.x*spread,base.y-tangent.y*spread);
+      ctx.quadraticCurveTo(base.x+tangent.x*spread*1.8+Math.cos(t*.004+index)*5,
+        base.y+tangent.y*spread*1.8-9,tip.x,tip.y);
+      ctx.quadraticCurveTo(base.x-tangent.x*spread*1.5-Math.sin(t*.004+index)*5,
+        base.y-tangent.y*spread*1.5+8,base.x-tangent.x*spread,base.y-tangent.y*spread);
+      ctx.closePath();
+      ctx.fillStyle=index%3===0?'rgba(196,255,229,.52)':'rgba(35,255,139,.34)';
+      ctx.shadowColor='#35ff9b';ctx.shadowBlur=16;ctx.fill();
+      ctx.beginPath();ctx.moveTo(base.x,base.y);
+      ctx.quadraticCurveTo((base.x+tip.x)/2+tangent.x*spread*.45,
+        (base.y+tip.y)/2+tangent.y*spread*.45,tip.x,tip.y);
+      ctx.strokeStyle=index%4===0?'rgba(239,255,247,.95)':'rgba(75,255,167,.92)';
+      ctx.lineWidth=1.5+Math.sin(t*.01+index)*.65;ctx.shadowBlur=13;ctx.stroke();
     }
     function frame(time){
       if(document.hidden){raf=0;return}
-      if(time-last<30){raf=requestAnimationFrame(frame);return}
-      last=time;
-      ctx.clearRect(0,0,width,height);
-      for(let i=0;i<particles.length;i++){
-        const q=particles[i];q.life+=.025;
-        q.x+=q.vx+Math.sin(time*.002+q.phase)*.35;
-        q.y+=q.vy;
-        const fade=Math.sin(Math.min(1,q.life/q.max)*Math.PI);
-        const flicker=.65+.35*Math.sin(time*.012+q.phase);
-        ctx.save();ctx.globalAlpha=Math.max(0,fade)*.8*flicker;
-        ctx.shadowBlur=10;ctx.shadowColor=q.color;ctx.fillStyle=q.color;
-        ctx.beginPath();ctx.ellipse(q.x,q.y,q.size*.65,q.size*1.9,-.25,0,Math.PI*2);ctx.fill();
-        ctx.restore();
-        if(q.life>=q.max || q.y<height*.06)particles[i]=spawn();
-      }
-      // Occasional rising chakra streaks around the armor perimeter.
+      if(time-last<(reduced?65:28)){raf=requestAnimationFrame(frame);return}
+      last=time;phase+=reduced?.012:.032;
+      ctx.clearRect(0,0,w,h);
+      // Several bright, broken energy rings hugging the Susanoo silhouette.
       ctx.save();ctx.globalCompositeOperation='lighter';
-      for(let j=0;j<5;j++){
-        const t=(time*.00016+j*.21)%1;
-        const x=width*(.52+.2*Math.sin(j*2.1+t*3));
-        const y=height*(.86-t*.7);
-        const grad=ctx.createRadialGradient(x,y,0,x,y,9);
-        grad.addColorStop(0,'rgba(164,255,211,.42)');
-        grad.addColorStop(1,'rgba(30,255,130,0)');
-        ctx.fillStyle=grad;ctx.fillRect(x-9,y-9,18,18);
+      for(let layer=0;layer<3;layer++){
+        ctx.beginPath();
+        const rx=w*(.235+layer*.012),ry=h*(.415+layer*.018);
+        for(let i=0;i<=100;i++){
+          const a=i/100*Math.PI*2;
+          const wobble=1+.018*Math.sin(a*9+phase*2+layer);
+          const q=point(a,rx,ry,wobble);
+          if(i===0)ctx.moveTo(q.x,q.y);else ctx.lineTo(q.x,q.y);
+        }
+        ctx.strokeStyle=layer===1?'rgba(191,255,224,.5)':'rgba(35,255,137,.38)';
+        ctx.lineWidth=layer===1?1.6:3.2-layer*.6;ctx.shadowColor='#20ff91';ctx.shadowBlur=layer===1?18:25;ctx.stroke();
       }
+      // Large animated flame tongues all around the guardian, not just tiny sparks.
+      const count=reduced?15:23;
+      for(let i=0;i<count;i++)flame(i/count*Math.PI*2+phase*.12,time,i);
       ctx.restore();
+      // Flying embers rise from the flame ring.
+      for(let i=0;i<particles.length;i++){
+        const q=particles[i];q.age+=reduced?.012:.026;
+        q.x+=q.vx+Math.sin(time*.0025+q.phase)*.48;
+        q.y+=q.vy;
+        const f=Math.max(0,Math.sin(Math.min(1,q.age/q.life)*Math.PI));
+        ctx.save();ctx.globalAlpha=f*(reduced?.48:.9);
+        ctx.fillStyle=q.color;ctx.shadowColor=q.color;ctx.shadowBlur=14;
+        ctx.beginPath();ctx.ellipse(q.x,q.y,q.size*.75,q.size*2.8,-.35,0,Math.PI*2);ctx.fill();
+        ctx.restore();
+        if(q.age>=q.life||q.y<2)particles[i]=spawn();
+      }
+      // Bright chakra flashes orbit the perimeter to make motion obvious on phone screens.
+      for(let j=0;j<7;j++){
+        const a=time*(reduced?.00018:.00042)+j*Math.PI*2/7;
+        const q=point(a,w*.25,h*.43,1.06);
+        const r=4+2*Math.sin(time*.01+j);
+        const g=ctx.createRadialGradient(q.x,q.y,0,q.x,q.y,r*3);
+        g.addColorStop(0,'rgba(230,255,244,.95)');
+        g.addColorStop(.25,'rgba(56,255,153,.8)');
+        g.addColorStop(1,'rgba(20,255,130,0)');
+        ctx.fillStyle=g;ctx.beginPath();ctx.arc(q.x,q.y,r*3,0,Math.PI*2);ctx.fill();
+      }
       raf=requestAnimationFrame(frame);
     }
     resize();
