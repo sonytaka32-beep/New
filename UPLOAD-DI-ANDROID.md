@@ -1,38 +1,31 @@
-# Upload Shisui Calc 3.0 from Android
+# Shisui Calc 4.0 — upload from Android
 
-## Option A — GitHub website
-1. Download `shisui-calc-v3-mobile.zip` and extract it with ZArchiver.
-2. Open your repository: https://github.com/sonytaka32-beep/New
-3. Open the `main` branch and choose **Add file → Upload files**.
-4. Select the contents of the extracted `shisui-calc-v3` folder, including the `assets` folder and `.github/workflows/build-apk.yml`.
-5. If Android's file picker hides `.github`, use Option B (Termux) so the workflow file is not missed.
-6. Commit the changes with a message such as `Upgrade Shisui Calc to 3.0 Susanoo Edition`.
+1. Download `shisui-calc-v4-mobile.zip`.
+2. Extract it with ZArchiver.
+3. Open https://github.com/sonytaka32-beep/New.
+4. Choose branch `main` → **Add file** → **Upload files**.
+5. Upload the contents of the extracted `shisui-calc-v4` folder, including the hidden `.github/workflows/build-apk.yml` and `assets/` folder.
+6. Commit with message `Upgrade Shisui Calc to 4.0 animated chakra`.
+7. Open **Actions**, wait for `Build Shisui Calc 4 APK`, then download artifact `shisui-calc-v4-debug-apk` and extract the APK.
 
-Important: upload the extracted files and folders, not the ZIP itself. Keep the folder structure exactly as it is.
-
-## Option B — Termux (recommended; includes hidden workflow folder)
-Install Termux, then:
+Important: keep the directory structure. Upload the extracted files, not the ZIP as a single file. If Android's file picker hides `.github`, use Termux:
 
 ```bash
 pkg update -y
 pkg install git unzip -y
 termux-setup-storage
 cd ~/storage/downloads
-unzip shisui-calc-v3-mobile.zip
+unzip shisui-calc-v4-mobile.zip
 git clone https://github.com/sonytaka32-beep/New.git
 cd New
-cp -r ~/storage/downloads/shisui-calc-v3/. .
+cp -r ~/storage/downloads/shisui-calc-v4/. .
 git status
 git add .
-git commit -m "Upgrade Shisui Calc to 3.0 Susanoo Edition"
+git commit -m "Upgrade Shisui Calc to 4.0 animated chakra"
 git push origin main
 ```
 
-If the ZIP is saved outside Downloads, adjust the `cp` source path. If you already cloned `New`, skip `git clone` and `cd` into your existing repository. GitHub may ask you to authenticate; use a GitHub token when prompted for an HTTPS password and never share it.
+If you already cloned the repository, skip `git clone` and enter your existing `New` folder. Adjust the ZIP path if it is not in Downloads.
 
-## Build the APK
-After the push, open the repository's **Actions** tab. Wait for `Build Shisui Calc 3 APK` to finish, then download the `shisui-calc-v3-debug-apk` artifact and extract the APK from it.
-
-The workflow intentionally keeps the known successful versions: Ubuntu 22.04, Node 20, Java 17, Cordova 12.0.0, Android platform 13.0.0, SDK 34 and build-tools 34.0.0. It adds only one required copy command for the new local `assets/` directory. It does not copy the empty `res/*` directory that caused the earlier issue.
-
-This package is source code; an APK is produced only after GitHub Actions completes successfully.
+## Build compatibility
+The workflow keeps the previous known successful environment and Cordova build commands unchanged. Only workflow display/artifact labels are renamed, and the app version becomes 4.0.0. The animated flames use local JavaScript canvas; no npm package or extra Cordova plugin is added.

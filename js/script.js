@@ -34,6 +34,73 @@
   function open(id){$(id).hidden=false}function close(id){$(id).hidden=true}document.querySelectorAll('[data-close]').forEach(b=>b.addEventListener('click',()=>close(b.dataset.close)));document.querySelectorAll('.overlay').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)close(o.id)}));
   function renderHistory(){const box=$('historyList');box.innerHTML='';if(!history.length){box.innerHTML='<div class="history-empty">Belum ada perhitungan tersimpan.</div>';return}history.forEach((h,i)=>{const item=document.createElement('div');item.className='history-item';const small=document.createElement('small');small.textContent=h.time+' · '+h.expression;const strong=document.createElement('strong');strong.textContent='= '+h.result;item.append(small,strong);item.addEventListener('click',()=>{input=h.result;expressionLine.textContent=h.expression+' =';justEvaluated=true;render();close('historyOverlay')});box.append(item)})}
   $('historyBtn').addEventListener('click',()=>{renderHistory();open('historyOverlay')});$('clearHistory').addEventListener('click',()=>{history=[];save();renderHistory();showToast('Riwayat dihapus')});$('settingsBtn').addEventListener('click',()=>open('settingsOverlay'));
+  // Lightweight Susanoo chakra flames: local canvas only, no network or libraries.
+  function startChakraFlames(){
+    const canvas=$('chakraCanvas');
+    if(!canvas || window.matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+    const ctx=canvas.getContext('2d');
+    if(!ctx)return;
+    let width=0,height=0,raf=0,last=0,particles=[];
+    const colors=['#38ff9a','#a6ffd4','#19d77b','#e0fff0'];
+    function resize(){
+      const rect=canvas.getBoundingClientRect();
+      const dpr=Math.min(window.devicePixelRatio||1,1.5);
+      width=Math.max(1,rect.width);height=Math.max(1,rect.height);
+      canvas.width=Math.round(width*dpr);canvas.height=Math.round(height*dpr);
+      ctx.setTransform(dpr,0,0,dpr,0,0);
+      particles=Array.from({length:46},()=>spawn(true));
+    }
+    function spawn(initial=false){
+      // Flame ring follows the outer silhouette of the Susanoo on the right.
+      const a=Math.random()*Math.PI*2;
+      const rx=width*.225,ry=height*.385;
+      return {x:width*.72+Math.cos(a)*rx,y:height*.59+Math.sin(a)*ry,
+        vx:(Math.random()-.5)*.42,vy:-(.45+Math.random()*1.05),
+        life:initial?Math.random():0,max:.65+Math.random()*.9,
+        size:1+Math.random()*2.5,phase:Math.random()*6.28,
+        color:colors[(Math.random()*colors.length)|0]};
+    }
+    function frame(time){
+      if(document.hidden){raf=0;return}
+      if(time-last<30){raf=requestAnimationFrame(frame);return}
+      last=time;
+      ctx.clearRect(0,0,width,height);
+      for(let i=0;i<particles.length;i++){
+        const q=particles[i];q.life+=.025;
+        q.x+=q.vx+Math.sin(time*.002+q.phase)*.35;
+        q.y+=q.vy;
+        const fade=Math.sin(Math.min(1,q.life/q.max)*Math.PI);
+        const flicker=.65+.35*Math.sin(time*.012+q.phase);
+        ctx.save();ctx.globalAlpha=Math.max(0,fade)*.8*flicker;
+        ctx.shadowBlur=10;ctx.shadowColor=q.color;ctx.fillStyle=q.color;
+        ctx.beginPath();ctx.ellipse(q.x,q.y,q.size*.65,q.size*1.9,-.25,0,Math.PI*2);ctx.fill();
+        ctx.restore();
+        if(q.life>=q.max || q.y<height*.06)particles[i]=spawn();
+      }
+      // Occasional rising chakra streaks around the armor perimeter.
+      ctx.save();ctx.globalCompositeOperation='lighter';
+      for(let j=0;j<5;j++){
+        const t=(time*.00016+j*.21)%1;
+        const x=width*(.52+.2*Math.sin(j*2.1+t*3));
+        const y=height*(.86-t*.7);
+        const grad=ctx.createRadialGradient(x,y,0,x,y,9);
+        grad.addColorStop(0,'rgba(164,255,211,.42)');
+        grad.addColorStop(1,'rgba(30,255,130,0)');
+        ctx.fillStyle=grad;ctx.fillRect(x-9,y-9,18,18);
+      }
+      ctx.restore();
+      raf=requestAnimationFrame(frame);
+    }
+    resize();
+    if('ResizeObserver' in window)new ResizeObserver(resize).observe(canvas);
+    else window.addEventListener('resize',resize,{passive:true});
+    document.addEventListener('visibilitychange',()=>{
+      if(document.hidden){if(raf)cancelAnimationFrame(raf);raf=0}
+      else if(!raf)raf=requestAnimationFrame(frame);
+    });
+    raf=requestAnimationFrame(frame);
+  }
+  startChakraFlames();
   // Lightweight ambient ember particles; all artwork is bundled locally.
   for(let i=0;i<18;i++){const p=document.createElement('i');p.className='particle';p.style.left=(Math.random()*100)+'%';p.style.bottom=(-10-Math.random()*50)+'px';p.style.animationDelay=(-Math.random()*9)+'s';p.style.animationDuration=(7+Math.random()*8)+'s';$('particles').append(p)}
   document.body.dataset.theme=settings.theme||'shisui';$('themeSelect').value=settings.theme||'shisui';soundOn=settings.sound!==false;$('soundSetting').checked=soundOn;$('soundBtn').style.color=soundOn?'var(--accent)':'var(--muted)';angle=settings.angle||'DEG';$('angleSelect').value=angle;$('angleMode').textContent=angle;setScientific(!!settings.scientific);render();
