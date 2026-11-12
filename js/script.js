@@ -36,7 +36,7 @@
   $('historyBtn').addEventListener('click',()=>{renderHistory();open('historyOverlay')});$('clearHistory').addEventListener('click',()=>{history=[];save();renderHistory();showToast('Riwayat dihapus')});$('settingsBtn').addEventListener('click',()=>open('settingsOverlay'));
   
   // =====================================================================
-  // FIXED: PRO ENGINE V4: NARUTO STORM 4 CHAKRA & ANATOMICAL 3D RIBCAGE
+  // PRO ENGINE V4: NARUTO STORM 4 CHAKRA & ANATOMICAL 3D RIBCAGE
   // Volumetric plasma, correct particle life, zero-collision error safety.
   // =====================================================================
   function startChakraFlames(){
@@ -49,10 +49,8 @@
     let w=1,h=1,dpr=1,raf=0,last=0;
     let flames=[], sparks=[];
     
-    // Posisi presisi mengikuti karakter Shisui & Susanoo di kanan
     const getCenter=()=>({x:w*0.71, y:h*0.54});
 
-    // 1. LIDAH API TAJAM (SHARP FLAME TONGUES) ALA NARUTO STORM
     class FlameTongue {
       constructor(isInit) {
         this.reset(isInit);
@@ -104,7 +102,6 @@
         ctx.save();
         ctx.globalCompositeOperation = 'screen';
 
-        // Lapis 1: Outer Emerald Flame Tongue (Tajam meruncing di ujung atas)
         const grad = ctx.createLinearGradient(bx, by, tx, ty);
         grad.addColorStop(0, `rgba(0, 190, 85, 0)`);
         grad.addColorStop(0.25, `rgba(0, 255, 115, ${alpha * 0.75})`);
@@ -119,10 +116,8 @@
         ctx.quadraticCurveTo(bx, by + curW * 0.4, bx - curW, by);
         ctx.fill();
 
-        // Lapis 2: Inner White-Hot Chakra Core (Inti api tajam)
         const coreW = curW * 0.42;
         const coreH = curH * 0.68;
-        // BUGFIX TERPECAHKAN: Mengubah "ctx" ke "coreX" untuk menghindari overwriting context canvas 2D
         const coreX = bx + wave1 * 0.65;
         const coreY = by - coreH;
 
@@ -138,7 +133,6 @@
       }
     }
 
-    // 2. PERCIKAN BARA TAJAM & KILAT CHAKRA (EMBERS & SPARKS)
     class ChakraSpark {
       constructor(isInit) {
         this.reset(isInit);
@@ -180,7 +174,6 @@
       }
     }
 
-    // 3. ANATOMICAL 3D SUSANOO RIBCAGE (TULANG RUSUK 3D MELINGKAR)
     function drawAnatomicalRibcage(time) {
       const c = getCenter();
       const breath = Math.sin(time * 0.0025);
@@ -189,7 +182,6 @@
       ctx.save();
       ctx.globalCompositeOperation = 'screen';
 
-      // Aura Inti Belakang (Backlight Glow di belakang Shisui)
       const bgGlow = ctx.createRadialGradient(c.x, c.y, 10, c.x, c.y, w * 0.28);
       bgGlow.addColorStop(0, 'rgba(0, 255, 120, 0.22)');
       bgGlow.addColorStop(0.55, 'rgba(0, 180, 75, 0.08)');
@@ -199,7 +191,6 @@
       ctx.arc(c.x, c.y, w * 0.28, 0, Math.PI * 2);
       ctx.fill();
 
-      // Tulang Belakang Vertikal (Ethereal Spine)
       const spineTop = c.y - h * 0.14;
       const spineBottom = c.y + h * 0.20;
       const spineGrad = ctx.createLinearGradient(c.x, spineTop, c.x, spineBottom);
@@ -216,7 +207,6 @@
       ctx.lineTo(c.x, spineBottom);
       ctx.stroke();
 
-      // Ruas-ruas Tulang Belakang (Vertebrae Nodes)
       for (let i = 0; i < 4; i++) {
         const vy = c.y - h * 0.07 + i * (h * 0.068) + breath * (3 + i);
         ctx.fillStyle = 'rgba(210, 255, 230, 0.65)';
@@ -225,7 +215,6 @@
         ctx.fill();
       }
 
-      // 4 Pasang Tulang Rusuk 3D (Melengkung dari punggung memeluk ke depan dada)
       const ribSpecs = [
         { yOff: -0.07, rx: 0.16, ry: 0.055, thick: 11, alpha: 0.70 },
         { yOff: -0.002, rx: 0.205, ry: 0.070, thick: 13, alpha: 0.85 },
@@ -240,42 +229,22 @@
         const dropY = h * rib.ry;
 
         [-1, 1].forEach(dir => {
-          // Titik pangkal di tulang belakang
           const startX = c.x + dir * 4;
           const startY = ry - dropY * 0.35;
-
-          // Titik lengkung luar (bahu/samping rusuk)
           const ctrl1X = c.x + dir * (rx * 1.18) + sway;
           const ctrl1Y = ry - dropY * 0.1;
-
-          // Titik lengkung depan bawah
           const ctrl2X = c.x + dir * (rx * 0.88) + sway;
           const ctrl2Y = ry + dropY * 1.05;
-
-          // Ujung depan tulang rusuk (meruncing menghadap ke tengah dada)
           const tipX = c.x + dir * (rx * 0.24) + sway * 0.5;
           const tipY = ry + dropY * 0.78;
-
           const t = rib.thick;
 
-          // Poligon Tulang Rusuk Bervolume (Tebal di pangkal/samping, tajam di ujung depan)
           ctx.beginPath();
           ctx.moveTo(startX, startY - t * 0.45);
-          // Sisi atas tulang rusuk
-          ctx.bezierCurveTo(
-            ctrl1X, ctrl1Y - t * 0.6,
-            ctrl2X, ctrl2Y - t * 0.45,
-            tipX, tipY
-          );
-          // Sisi bawah tulang rusuk kembali ke pangkal
-          ctx.bezierCurveTo(
-            ctrl2X + dir * (t * 0.4), ctrl2Y + t * 0.55,
-            ctrl1X + dir * (t * 0.3), ctrl1Y + t * 0.6,
-            startX, startY + t * 0.45
-          );
+          ctx.bezierCurveTo(ctrl1X, ctrl1Y - t * 0.6, ctrl2X, ctrl2Y - t * 0.45, tipX, tipY);
+          ctx.bezierCurveTo(ctrl2X + dir * (t * 0.4), ctrl2Y + t * 0.55, ctrl1X + dir * (t * 0.3), ctrl1Y + t * 0.6, startX, startY + t * 0.45);
           ctx.closePath();
 
-          // Gradien 3D dari pangkal ke ujung rusuk
           const ribGrad = ctx.createLinearGradient(c.x, ry, c.x + dir * rx, ry + dropY);
           ribGrad.addColorStop(0, `rgba(0, 210, 95, ${rib.alpha * 0.35})`);
           ribGrad.addColorStop(0.55, `rgba(20, 255, 135, ${rib.alpha * 0.85})`);
@@ -288,7 +257,6 @@
           ctx.fillStyle = ribGrad;
           ctx.fill();
 
-          // Garis Inti Tulang (Sharp Bone Ridge Highlight ala Cel-Shading Storm)
           ctx.beginPath();
           ctx.moveTo(startX, startY);
           ctx.bezierCurveTo(ctrl1X, ctrl1Y, ctrl2X, ctrl2Y, tipX, tipY);
@@ -299,7 +267,6 @@
         });
       });
 
-      // 4. PUSARAN ANGIN CHAKRA DI KAKI (GROUND VORTEX RING)
       const baseY = c.y + h * 0.33;
       const baseW = w * 0.21 * scalePulse;
       const ringGrad = ctx.createRadialGradient(c.x, baseY, baseW * 0.1, c.x, baseY, baseW * 1.2);
@@ -316,7 +283,6 @@
       ctx.restore();
     }
 
-    // 5. KILATAN PETIR CHAKRA (STORM CHAKRA LIGHTNING ARCS)
     function drawChakraLightning(time) {
       if (Math.sin(time * 0.037) < 0.25 && Math.cos(time * 0.019) < 0.4) return;
       const c = getCenter();
@@ -367,23 +333,19 @@
       
       ctx.clearRect(0,0,w,h);
       
-      // Layer 1: Lidah api bagian belakang
       const half = Math.floor(flames.length / 2);
       for(let i=0; i<half; i++) {
         flames[i].update(dt);
         flames[i].draw(ctx, time);
       }
 
-      // Layer 2: Kerangka Tulang Rusuk 3D Anatomis & Spine
       drawAnatomicalRibcage(time);
 
-      // Layer 3: Lidah api bagian depan (menyatu dengan rusuk)
       for(let i=half; i<flames.length; i++) {
         flames[i].update(dt);
         flames[i].draw(ctx, time);
       }
 
-      // Layer 4: Percikan bara & kilatan petir chakra
       for(let i=0; i<sparks.length; i++) {
         sparks[i].update(dt);
         sparks[i].draw(ctx);
