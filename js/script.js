@@ -36,8 +36,8 @@
   $('historyBtn').addEventListener('click',()=>{renderHistory();open('historyOverlay')});$('clearHistory').addEventListener('click',()=>{history=[];save();renderHistory();showToast('Riwayat dihapus')});$('settingsBtn').addEventListener('click',()=>open('settingsOverlay'));
   
   // =====================================================================
-  // FIXED: NARUTO STORM STYLE SUSANOO CHAKRA ENGINE
-  // Volumetric plasma, correct particle lifespan, and bright skeletal ribs
+  // PRO ENGINE V3: NARUTO STORM 4 SUSANOO CHAKRA & ANATOMICAL 3D RIBCAGE
+  // Sharp cel-shaded flame tongues, 3D wrapping ribs, & chakra lightning
   // =====================================================================
   function startChakraFlames(){
     const canvas=$('chakraCanvas');
@@ -47,138 +47,320 @@
 
     const reduced=window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     let w=1,h=1,dpr=1,raf=0,last=0;
-    let particles=[];
-    const center=()=>({x:w*.72,y:h*.56});
+    let flames=[], sparks=[];
+    
+    // Posisi presisi mengikuti karakter Shisui & Susanoo di kanan
+    const getCenter=()=>({x:w*0.71, y:h*0.54});
 
-    class ChakraAura {
-      constructor(isInitial) {
-        this.reset(isInitial);
+    // 1. LIDAH API TAJAM (SHARP FLAME TONGUES) ALA NARUTO STORM
+    class FlameTongue {
+      constructor(isInit) {
+        this.reset(isInit);
       }
-      reset(isInitial) {
-        const c = center();
-        const angle = Math.random() * Math.PI * 2;
-        const radiusX = w * (0.15 + Math.random() * 0.22);
-        const radiusY = h * (0.25 + Math.random() * 0.25);
+      reset(isInit) {
+        const c = getCenter();
+        // Spawn mengikuti kontur oval siluet Susanoo & tulang rusuk
+        const side = Math.random() < 0.5 ? -1 : 1;
+        const t = Math.random(); // 0 (bawah) ke 1 (atas)
         
-        this.x = c.x + Math.cos(angle) * radiusX;
-        this.y = c.y + Math.sin(angle) * radiusY;
+        // Kontur lebar Susanoo (lebar di bahu/tengah, menyempit di atas & bawah)
+        const contourW = Math.sin(t * Math.PI) * (w * 0.19) + (w * 0.04);
+        const edgeBias = 0.55 + Math.random() * 0.55; // Fokus di tepi luar tubuh Susanoo
         
-        this.vx = (Math.cos(angle) * 0.5) + (Math.random() - 0.5) * 1.5;
-        this.vy = -Math.random() * 3.5 - 0.5;
+        this.x = c.x + side * contourW * edgeBias;
+        this.y = (c.y + h * 0.34) - t * (h * 0.72);
         
-        // BUGFIX: Skala umur partikel dikonversi menjadi milidetik agar hidup lebih lama (2 - 5 detik)
-        this.maxLife = 2000 + Math.random() * 3000;
-        this.life = isInitial ? Math.random() * this.maxLife : 0;
+        this.height = 45 + Math.random() * 75;
+        this.width = 10 + Math.random() * 18;
+        this.vy = -(1.4 + Math.random() * 2.2);
+        this.vx = side * (0.15 + Math.random() * 0.45);
+        this.freq = 0.004 + Math.random() * 0.004;
+        this.phase = Math.random() * Math.PI * 2;
+        this.swayAmp = 8 + Math.random() * 14;
         
-        this.size = 20 + Math.random() * 45;
-        this.type = Math.random() > 0.8 ? 'ember' : 'plasma';
-        this.seed = Math.random() * 1000;
+        this.maxLife = 900 + Math.random() * 1100;
+        this.life = isInit ? Math.random() * this.maxLife : 0;
       }
-      update(dt, time) {
+      update(dt) {
         this.life += dt;
-        this.vx += Math.sin(time * 0.0015 + this.seed) * 0.05;
-        this.vy -= 0.008; 
-        
-        this.x += this.vx * (dt/16);
-        this.y += this.vy * (dt/16);
-        
-        if (this.life >= this.maxLife || this.y < -100) {
-          this.reset(false);
-        }
+        const k = dt / 16;
+        this.x += this.vx * k;
+        this.y += this.vy * k;
+        if(this.life >= this.maxLife) this.reset(false);
       }
       draw(ctx, time) {
-        const progress = this.life / this.maxLife;
-        // Curve melengkung agar efek masuknya (fade in) cepat, matinya (fade out) perlahan
-        const alpha = Math.sin(Math.pow(progress, 0.7) * Math.PI) * (this.type === 'ember' ? 0.9 : 0.65);
-        
+        const p = this.life / this.maxLife;
+        const alpha = Math.sin(Math.pow(p, 0.65) * Math.PI);
+        if (alpha <= 0.02) return;
+
+        const curH = this.height * (0.5 + 0.6 * Math.sin(p * Math.PI));
+        const curW = this.width * (1 - p * 0.45);
+        const wave1 = Math.sin(time * this.freq + this.phase) * this.swayAmp;
+        const wave2 = Math.cos(time * this.freq * 1.3 + this.phase) * (this.swayAmp * 0.65);
+
+        const bx = this.x;
+        const by = this.y;
+        const tx = bx + wave1;
+        const ty = by - curH;
+
         ctx.save();
         ctx.globalCompositeOperation = 'screen';
-        ctx.globalAlpha = Math.max(0, alpha);
-        
-        if (this.type === 'ember') {
-          ctx.fillStyle = '#baffd2';
-          ctx.shadowColor = '#00ff73';
-          ctx.shadowBlur = 12;
-          ctx.beginPath();
-          ctx.arc(this.x, this.y, this.size * 0.12, 0, Math.PI * 2);
-          ctx.fill();
-        } else {
-          const sway = Math.sin(time * 0.002 + this.seed) * 20;
-          const stretch = 1 + progress * 1.8; // Menarik partikel ke atas ala wisp
-          
-          const grad = ctx.createRadialGradient(0, 0, 0, 0, 0, this.size);
-          grad.addColorStop(0, progress < 0.2 ? 'rgba(50, 255, 140, 1)' : 'rgba(20, 220, 100, 1)');
-          grad.addColorStop(0.4, 'rgba(0, 180, 80, 0.6)');
-          grad.addColorStop(1, 'rgba(0, 100, 40, 0)');
-          
-          ctx.fillStyle = grad;
-          // Memakai metode transformasi yang lebih universal agar anti-crash di semua layar
-          ctx.translate(this.x + sway, this.y);
-          ctx.rotate(Math.sin(time*0.001 + this.seed) * 0.4);
-          ctx.scale(0.8, stretch);
-          
-          ctx.beginPath();
-          ctx.arc(0, 0, this.size, 0, Math.PI * 2);
-          ctx.fill();
-        }
+
+        // Lapis 1: Outer Emerald Flame Tongue (Tajam meruncing di ujung atas)
+        const grad = ctx.createLinearGradient(bx, by, tx, ty);
+        grad.addColorStop(0, `rgba(0, 190, 85, 0)`);
+        grad.addColorStop(0.25, `rgba(0, 255, 115, ${alpha * 0.75})`);
+        grad.addColorStop(0.7, `rgba(90, 255, 165, ${alpha * 0.85})`);
+        grad.addColorStop(1, `rgba(210, 255, 230, 0)`);
+
+        ctx.fillStyle = grad;
+        ctx.beginPath();
+        ctx.moveTo(bx - curW, by);
+        ctx.quadraticCurveTo(bx - curW * 0.4 + wave2, by - curH * 0.5, tx, ty);
+        ctx.quadraticCurveTo(bx + curW * 0.4 + wave2, by - curH * 0.5, bx + curW, by);
+        ctx.quadraticCurveTo(bx, by + curW * 0.4, bx - curW, by);
+        ctx.fill();
+
+        // Lapis 2: Inner White-Hot Chakra Core (Inti api tajam)
+        const coreW = curW * 0.42;
+        const coreH = curH * 0.68;
+        const ctx = bx + wave1 * 0.65;
+        const cty = by - coreH;
+
+        ctx.fillStyle = `rgba(225, 255, 240, ${alpha * 0.7})`;
+        ctx.beginPath();
+        ctx.moveTo(bx - coreW, by);
+        ctx.quadraticCurveTo(bx + wave2 * 0.5, by - coreH * 0.5, ctx, cty);
+        ctx.quadraticCurveTo(bx + wave2 * 0.5, by - coreH * 0.5, bx + coreW, by);
+        ctx.closePath();
+        ctx.fill();
+
         ctx.restore();
       }
     }
 
-    function drawSkeletalCore(time) {
-      const c = center();
-      const pulse = 0.85 + 0.15 * Math.sin(time * 0.003);
-      
+    // 2. PERCIKAN BARA TAJAM & KILAT CHAKRA (EMBERS & SPARKS)
+    class ChakraSpark {
+      constructor(isInit) {
+        this.reset(isInit);
+      }
+      reset(isInit) {
+        const c = getCenter();
+        const angle = Math.random() * Math.PI * 2;
+        const rx = (0.04 + Math.random() * 0.20) * w;
+        const ry = (0.08 + Math.random() * 0.34) * h;
+        this.x = c.x + Math.cos(angle) * rx;
+        this.y = c.y + Math.sin(angle) * ry;
+        this.vy = -(1.8 + Math.random() * 3.2);
+        this.vx = (Math.random() - 0.5) * 1.6;
+        this.len = 6 + Math.random() * 14;
+        this.maxLife = 500 + Math.random() * 900;
+        this.life = isInit ? Math.random() * this.maxLife : 0;
+      }
+      update(dt) {
+        this.life += dt;
+        const k = dt / 16;
+        this.x += this.vx * k;
+        this.y += this.vy * k;
+        if(this.life >= this.maxLife) this.reset(false);
+      }
+      draw(ctx) {
+        const p = this.life / this.maxLife;
+        const alpha = Math.sin(p * Math.PI);
+        if(alpha <= 0) return;
+        ctx.save();
+        ctx.globalCompositeOperation = 'screen';
+        ctx.strokeStyle = `rgba(190, 255, 220, ${alpha * 0.9})`;
+        ctx.lineWidth = 1.8;
+        ctx.lineCap = 'round';
+        ctx.beginPath();
+        ctx.moveTo(this.x, this.y);
+        ctx.lineTo(this.x - this.vx * 2.5, this.y + this.len);
+        ctx.stroke();
+        ctx.restore();
+      }
+    }
+
+    // 3. ANATOMICAL 3D SUSANOO RIBCAGE (TULANG RUSUK 3D MELINGKAR)
+    function drawAnatomicalRibcage(time) {
+      const c = getCenter();
+      const breath = Math.sin(time * 0.0025);
+      const scalePulse = 1 + breath * 0.025;
+
       ctx.save();
       ctx.globalCompositeOperation = 'screen';
+
+      // Aura Inti Belakang (Backlight Glow di belakang Shisui)
+      const bgGlow = ctx.createRadialGradient(c.x, c.y, 10, c.x, c.y, w * 0.28);
+      bgGlow.addColorStop(0, 'rgba(0, 255, 120, 0.22)');
+      bgGlow.addColorStop(0.55, 'rgba(0, 180, 75, 0.08)');
+      bgGlow.addColorStop(1, 'rgba(0, 80, 30, 0)');
+      ctx.fillStyle = bgGlow;
+      ctx.beginPath();
+      ctx.arc(c.x, c.y, w * 0.28, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Tulang Belakang Vertikal (Ethereal Spine)
+      const spineTop = c.y - h * 0.14;
+      const spineBottom = c.y + h * 0.20;
+      const spineGrad = ctx.createLinearGradient(c.x, spineTop, c.x, spineBottom);
+      spineGrad.addColorStop(0, 'rgba(0, 255, 128, 0)');
+      spineGrad.addColorStop(0.25, 'rgba(80, 255, 165, 0.45)');
+      spineGrad.addColorStop(0.8, 'rgba(80, 255, 165, 0.4)');
+      spineGrad.addColorStop(1, 'rgba(0, 255, 128, 0)');
       
-      // Menggambar 5 tulang rusuk
-      for(let i=0; i<5; i++) {
-        const ribY = c.y - h * 0.03 - (i * h * 0.09);
-        const ribWidth = w * (0.24 - i * 0.03) * pulse; 
-        const sway = Math.sin(time * 0.002 + i) * 10;
-        
+      ctx.strokeStyle = spineGrad;
+      ctx.lineWidth = 10;
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.moveTo(c.x, spineTop);
+      ctx.lineTo(c.x, spineBottom);
+      ctx.stroke();
+
+      // Ruas-ruas Tulang Belakang (Vertebrae Nodes)
+      for (let i = 0; i < 4; i++) {
+        const vy = c.y - h * 0.07 + i * (h * 0.068) + breath * (3 + i);
+        ctx.fillStyle = 'rgba(210, 255, 230, 0.65)';
         ctx.beginPath();
-        // Lengkungan rusuk dari ujung ke poros tengah ke ujung satunya
-        ctx.moveTo(c.x - ribWidth + sway, ribY + 30);
-        ctx.quadraticCurveTo(c.x + sway, ribY - 25, c.x + ribWidth + sway, ribY + 30);
-        
-        // Cahaya luar rusuk (Glow)
-        ctx.strokeStyle = `rgba(20, 255, 130, ${0.45 - i*0.07})`;
-        ctx.lineWidth = 22 + i * 2;
-        ctx.lineCap = 'round';
-        ctx.shadowColor = '#00ff73';
-        ctx.shadowBlur = 25;
-        ctx.stroke();
-        
-        // Tulang dalam rusuk (Bone Core)
-        ctx.beginPath();
-        ctx.moveTo(c.x - ribWidth + sway, ribY + 30);
-        ctx.quadraticCurveTo(c.x + sway, ribY - 25, c.x + ribWidth + sway, ribY + 30);
-        ctx.strokeStyle = `rgba(200, 255, 220, ${0.85 - i*0.1})`;
-        ctx.lineWidth = 4;
-        ctx.shadowBlur = 5;
-        ctx.stroke();
+        ctx.ellipse(c.x, vy, 8, 4.5, 0, 0, Math.PI * 2);
+        ctx.fill();
       }
+
+      // 4 Pasang Tulang Rusuk 3D (Melengkung dari punggung memeluk ke depan dada)
+      const ribSpecs = [
+        { yOff: -0.07, rx: 0.16, ry: 0.055, thick: 11, alpha: 0.70 },
+        { yOff: -0.002, rx: 0.205, ry: 0.070, thick: 13, alpha: 0.85 },
+        { yOff:  0.068, rx: 0.19, ry: 0.068, thick: 12, alpha: 0.80 },
+        { yOff:  0.135, rx: 0.145, ry: 0.052, thick: 9.5, alpha: 0.60 }
+      ];
+
+      ribSpecs.forEach((rib, idx) => {
+        const sway = Math.sin(time * 0.003 + idx * 0.7) * 4;
+        const ry = c.y + h * rib.yOff + breath * (4 + idx * 1.5);
+        const rx = w * rib.rx * scalePulse;
+        const dropY = h * rib.ry;
+
+        [-1, 1].forEach(dir => {
+          // Titik pangkal di tulang belakang
+          const startX = c.x + dir * 4;
+          const startY = ry - dropY * 0.35;
+
+          // Titik lengkung luar (bahu/samping rusuk)
+          const ctrl1X = c.x + dir * (rx * 1.18) + sway;
+          const ctrl1Y = ry - dropY * 0.1;
+
+          // Titik lengkung depan bawah
+          const ctrl2X = c.x + dir * (rx * 0.88) + sway;
+          const ctrl2Y = ry + dropY * 1.05;
+
+          // Ujung depan tulang rusuk (meruncing menghadap ke tengah dada)
+          const tipX = c.x + dir * (rx * 0.24) + sway * 0.5;
+          const tipY = ry + dropY * 0.78;
+
+          const t = rib.thick;
+
+          // Poligon Tulang Rusuk Bervolume (Tebal di pangkal/samping, tajam di ujung depan)
+          ctx.beginPath();
+          ctx.moveTo(startX, startY - t * 0.45);
+          // Sisi atas tulang rusuk
+          ctx.bezierCurveTo(
+            ctrl1X, ctrl1Y - t * 0.6,
+            ctrl2X, ctrl2Y - t * 0.45,
+            tipX, tipY
+          );
+          // Sisi bawah tulang rusuk kembali ke pangkal
+          ctx.bezierCurveTo(
+            ctrl2X + dir * (t * 0.4), ctrl2Y + t * 0.55,
+            ctrl1X + dir * (t * 0.3), ctrl1Y + t * 0.6,
+            startX, startY + t * 0.45
+          );
+          ctx.closePath();
+
+          // Gradien 3D dari pangkal ke ujung rusuk
+          const ribGrad = ctx.createLinearGradient(c.x, ry, c.x + dir * rx, ry + dropY);
+          ribGrad.addColorStop(0, `rgba(0, 210, 95, ${rib.alpha * 0.35})`);
+          ribGrad.addColorStop(0.55, `rgba(20, 255, 135, ${rib.alpha * 0.85})`);
+          ribGrad.addColorStop(0.88, `rgba(170, 255, 215, ${rib.alpha * 0.95})`);
+          ribGrad.addColorStop(1, `rgba(240, 255, 245, ${rib.alpha})`);
+
+          ctx.save();
+          ctx.shadowColor = '#00ff73';
+          ctx.shadowBlur = 18;
+          ctx.fillStyle = ribGrad;
+          ctx.fill();
+
+          // Garis Inti Tulang (Sharp Bone Ridge Highlight ala Cel-Shading Storm)
+          ctx.beginPath();
+          ctx.moveTo(startX, startY);
+          ctx.bezierCurveTo(ctrl1X, ctrl1Y, ctrl2X, ctrl2Y, tipX, tipY);
+          ctx.strokeStyle = `rgba(230, 255, 240, ${rib.alpha * 0.85})`;
+          ctx.lineWidth = 2.2;
+          ctx.stroke();
+          ctx.restore();
+        });
+      });
+
+      // 4. PUSARAN ANGIN CHAKRA DI KAKI (GROUND VORTEX RING)
+      const baseY = c.y + h * 0.33;
+      const baseW = w * 0.21 * scalePulse;
+      const ringGrad = ctx.createRadialGradient(c.x, baseY, baseW * 0.1, c.x, baseY, baseW * 1.2);
+      ringGrad.addColorStop(0, 'rgba(0, 255, 120, 0)');
+      ringGrad.addColorStop(0.65, 'rgba(0, 255, 120, 0.35)');
+      ringGrad.addColorStop(0.85, 'rgba(180, 255, 220, 0.6)');
+      ringGrad.addColorStop(1, 'rgba(0, 255, 120, 0)');
+
+      ctx.fillStyle = ringGrad;
+      ctx.beginPath();
+      ctx.ellipse(c.x, baseY, baseW * 1.15, h * 0.035, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.restore();
+    }
+
+    // 5. KILATAN PETIR CHAKRA (STORM CHAKRA LIGHTNING ARCS)
+    function drawChakraLightning(time) {
+      // Berkedip secara acak seperti kelebihan muatan chakra di game Storm
+      if (Math.sin(time * 0.037) < 0.25 && Math.cos(time * 0.019) < 0.4) return;
+      const c = getCenter();
+      const side = Math.sin(time * 0.09) > 0 ? 1 : -1;
+      let lx = c.x + side * (w * (0.06 + (time % 11) * 0.012));
+      let ly = c.y + ((time % 17) - 8) * (h * 0.025);
+
+      ctx.save();
+      ctx.globalCompositeOperation = 'screen';
+      ctx.strokeStyle = 'rgba(215, 255, 235, 0.92)';
+      ctx.shadowColor = '#00ff73';
+      ctx.shadowBlur = 12;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(lx, ly);
+
+      for (let i = 0; i < 5; i++) {
+        lx += (Math.sin(time * 0.2 + i * 2.3) ) * 16;
+        ly -= 12 + (i * 3);
+        ctx.lineTo(lx, ly);
+      }
+      ctx.stroke();
       ctx.restore();
     }
 
     function resize(){
       const r=canvas.getBoundingClientRect();
       w=Math.max(1,r.width);h=Math.max(1,r.height);
-      dpr=Math.min(window.devicePixelRatio||1,1.5);
+      dpr=Math.min(window.devicePixelRatio||1,1.75);
       canvas.width=Math.round(w*dpr);canvas.height=Math.round(h*dpr);
       ctx.setTransform(dpr,0,0,dpr,0,0);
       
-      particles = [];
-      const count = reduced ? 30 : 100; 
-      for(let i=0; i<count; i++) particles.push(new ChakraAura(true));
+      flames = [];
+      sparks = [];
+      const flameCount = reduced ? 24 : 68;
+      const sparkCount = reduced ? 12 : 36;
+      for(let i=0; i<flameCount; i++) flames.push(new FlameTongue(true));
+      for(let i=0; i<sparkCount; i++) sparks.push(new ChakraSpark(true));
     }
 
     function frame(time){
       if(document.hidden){raf=0;return;}
-      
-      // BUGFIX: Menyesuaikan timbangan waktu (Delta Time) secara aman
       if(!last) last = time;
       let dt = time - last;
       if (reduced && dt < 45) { raf = requestAnimationFrame(frame); return; }
@@ -187,14 +369,28 @@
       
       ctx.clearRect(0,0,w,h);
       
-      // 1. Gambar kerangka tulang bercahaya di latar belakang
-      drawSkeletalCore(time);
-      
-      // 2. Render partikel plasma / wisp chakra
-      for(let i=0; i<particles.length; i++) {
-        particles[i].update(dt, time);
-        particles[i].draw(ctx, time);
+      // Layer 1: Lidah api bagian belakang
+      const half = Math.floor(flames.length / 2);
+      for(let i=0; i<half; i++) {
+        flames[i].update(dt);
+        flames[i].draw(ctx, time);
       }
+
+      // Layer 2: Kerangka Tulang Rusuk 3D Anatomis & Spine
+      drawAnatomicalRibcage(time);
+
+      // Layer 3: Lidah api bagian depan (menyatu dengan rusuk)
+      for(let i=half; i<flames.length; i++) {
+        flames[i].update(dt);
+        flames[i].draw(ctx, time);
+      }
+
+      // Layer 4: Percikan bara & kilatan petir chakra
+      for(let i=0; i<sparks.length; i++) {
+        sparks[i].update(dt);
+        sparks[i].draw(ctx);
+      }
+      if(!reduced) drawChakraLightning(time);
       
       raf=requestAnimationFrame(frame);
     }
