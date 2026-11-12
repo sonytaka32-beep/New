@@ -9,28 +9,42 @@ permissions:
 jobs:
   build-android:
     runs-on: ubuntu-22.04
+    env:
+      ANDROID_SDK_ROOT: /usr/local/lib/android/sdk
+      JAVA_HOME: /usr/lib/jvm/temurin-17-jdk-amd64
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
+
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '17'
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
-      - name: Install Android SDK packages
-        run: sdkmanager "platform-tools" "platforms;android-34" "build-tools;34.0.0"
+
+      - name: Install Android SDK packages (cmdline-tools)
+        run: |
+          # Use pre-installed cmdline-tools on ubuntu-22.04
+          yes | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --licenses
+          $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager \
+            "platform-tools" \
+            "platforms;android-34" \
+            "build-tools;34.0.0" \
+            "cmdline-tools;latest"
+
       - name: Install Cordova
         run: npm install -g cordova@12.0.0
+
       - name: Add Android platform and build
         run: |
           cordova platform add android@13.0.0
           cordova build android --debug
+
       - name: Upload debug APK
         uses: actions/upload-artifact@v4
         with:
