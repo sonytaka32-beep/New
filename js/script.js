@@ -36,8 +36,8 @@
   $('historyBtn').addEventListener('click',()=>{renderHistory();open('historyOverlay')});$('clearHistory').addEventListener('click',()=>{history=[];save();renderHistory();showToast('Riwayat dihapus')});$('settingsBtn').addEventListener('click',()=>open('settingsOverlay'));
   
   // =====================================================================
-  // NARUTO STORM STYLE SUSANOO CHAKRA ENGINE
-  // Realistic volumetric plasma, ethereal wisps, & pulsing skeletal ribs
+  // FIXED: NARUTO STORM STYLE SUSANOO CHAKRA ENGINE
+  // Volumetric plasma, correct particle lifespan, and bright skeletal ribs
   // =====================================================================
   function startChakraFlames(){
     const canvas=$('chakraCanvas');
@@ -48,8 +48,7 @@
     const reduced=window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     let w=1,h=1,dpr=1,raf=0,last=0;
     let particles=[];
-
-    const center=()=>({x:w*.72,y:h*.56}); // Anchored to Susanoo image
+    const center=()=>({x:w*.72,y:h*.56});
 
     class ChakraAura {
       constructor(isInitial) {
@@ -58,72 +57,74 @@
       reset(isInitial) {
         const c = center();
         const angle = Math.random() * Math.PI * 2;
-        const radiusX = w * (0.15 + Math.random() * 0.18);
-        const radiusY = h * (0.25 + Math.random() * 0.22);
+        const radiusX = w * (0.15 + Math.random() * 0.22);
+        const radiusY = h * (0.25 + Math.random() * 0.25);
         
         this.x = c.x + Math.cos(angle) * radiusX;
         this.y = c.y + Math.sin(angle) * radiusY;
         
-        // Upward ethereal drift
-        this.vx = (Math.cos(angle) * 0.4) + (Math.random() - 0.5) * 1.2;
-        this.vy = -Math.random() * 2.5 - 0.5;
+        this.vx = (Math.cos(angle) * 0.5) + (Math.random() - 0.5) * 1.5;
+        this.vy = -Math.random() * 3.5 - 0.5;
         
-        this.life = isInitial ? Math.random() * 100 : 0;
-        this.maxLife = 50 + Math.random() * 70;
-        this.size = 5 + Math.random() * 25;
-        this.type = Math.random() > 0.85 ? 'ember' : 'plasma';
+        // BUGFIX: Skala umur partikel dikonversi menjadi milidetik agar hidup lebih lama (2 - 5 detik)
+        this.maxLife = 2000 + Math.random() * 3000;
+        this.life = isInitial ? Math.random() * this.maxLife : 0;
+        
+        this.size = 20 + Math.random() * 45;
+        this.type = Math.random() > 0.8 ? 'ember' : 'plasma';
         this.seed = Math.random() * 1000;
       }
       update(dt, time) {
         this.life += dt;
-        // Ethereal turbulence (Simulasi aliran aura berasap)
-        this.vx += Math.sin(time * 0.0015 + this.seed) * 0.04;
-        this.vy -= 0.015; 
+        this.vx += Math.sin(time * 0.0015 + this.seed) * 0.05;
+        this.vy -= 0.008; 
         
         this.x += this.vx * (dt/16);
         this.y += this.vy * (dt/16);
         
-        if (this.life >= this.maxLife || this.y < -50) {
+        if (this.life >= this.maxLife || this.y < -100) {
           this.reset(false);
         }
       }
       draw(ctx, time) {
         const progress = this.life / this.maxLife;
-        // Smooth fade in and out blending
-        const alpha = Math.max(0, Math.sin(progress * Math.PI)) * (this.type === 'ember' ? 0.9 : 0.45);
+        // Curve melengkung agar efek masuknya (fade in) cepat, matinya (fade out) perlahan
+        const alpha = Math.sin(Math.pow(progress, 0.7) * Math.PI) * (this.type === 'ember' ? 0.9 : 0.65);
         
         ctx.save();
         ctx.globalCompositeOperation = 'screen';
-        ctx.globalAlpha = alpha;
+        ctx.globalAlpha = Math.max(0, alpha);
         
         if (this.type === 'ember') {
-          ctx.fillStyle = '#ccffdd';
+          ctx.fillStyle = '#baffd2';
           ctx.shadowColor = '#00ff73';
           ctx.shadowBlur = 12;
           ctx.beginPath();
-          ctx.arc(this.x, this.y, this.size * 0.15, 0, Math.PI * 2);
+          ctx.arc(this.x, this.y, this.size * 0.12, 0, Math.PI * 2);
           ctx.fill();
         } else {
-          // Plasma Wisp Layer
-          const sway = Math.sin(time * 0.002 + this.seed) * 15;
-          const stretch = 1 + progress * 2;
+          const sway = Math.sin(time * 0.002 + this.seed) * 20;
+          const stretch = 1 + progress * 1.8; // Menarik partikel ke atas ala wisp
           
-          // Radial gradient untuk efek chakra volumetrik ala Storm
-          const grad = ctx.createRadialGradient(this.x + sway, this.y, 0, this.x + sway, this.y, this.size);
-          grad.addColorStop(0, progress < 0.3 ? 'rgba(0, 230, 100, 1)' : 'rgba(51, 255, 153, 1)');
-          grad.addColorStop(0.4, 'rgba(0, 204, 85, 0.6)');
-          grad.addColorStop(1, 'rgba(0, 153, 68, 0)');
+          const grad = ctx.createRadialGradient(0, 0, 0, 0, 0, this.size);
+          grad.addColorStop(0, progress < 0.2 ? 'rgba(50, 255, 140, 1)' : 'rgba(20, 220, 100, 1)');
+          grad.addColorStop(0.4, 'rgba(0, 180, 80, 0.6)');
+          grad.addColorStop(1, 'rgba(0, 100, 40, 0)');
           
           ctx.fillStyle = grad;
+          // Memakai metode transformasi yang lebih universal agar anti-crash di semua layar
+          ctx.translate(this.x + sway, this.y);
+          ctx.rotate(Math.sin(time*0.001 + this.seed) * 0.4);
+          ctx.scale(0.8, stretch);
+          
           ctx.beginPath();
-          ctx.ellipse(this.x + sway, this.y, this.size * 0.8, this.size * stretch, Math.sin(time*0.001 + this.seed) * 0.5, 0, Math.PI * 2);
+          ctx.arc(0, 0, this.size, 0, Math.PI * 2);
           ctx.fill();
         }
         ctx.restore();
       }
     }
 
-    // Menggambar garis kerangka rusuk Susanoo yang bercahaya di latar belakang
     function drawSkeletalCore(time) {
       const c = center();
       const pulse = 0.85 + 0.15 * Math.sin(time * 0.003);
@@ -131,31 +132,32 @@
       ctx.save();
       ctx.globalCompositeOperation = 'screen';
       
-      // Render 4 lapis tulang rusuk chakra
-      for(let i=0; i<4; i++) {
-        const ribY = c.y - h * 0.05 - (i * h * 0.12);
-        const ribWidth = w * (0.28 - i * 0.04) * pulse;
-        const sway = Math.sin(time * 0.002 + i) * 8;
+      // Menggambar 5 tulang rusuk
+      for(let i=0; i<5; i++) {
+        const ribY = c.y - h * 0.03 - (i * h * 0.09);
+        const ribWidth = w * (0.24 - i * 0.03) * pulse; 
+        const sway = Math.sin(time * 0.002 + i) * 10;
         
         ctx.beginPath();
+        // Lengkungan rusuk dari ujung ke poros tengah ke ujung satunya
         ctx.moveTo(c.x - ribWidth + sway, ribY + 30);
-        ctx.quadraticCurveTo(c.x + sway, ribY - 35, c.x + ribWidth + sway, ribY + 30);
+        ctx.quadraticCurveTo(c.x + sway, ribY - 25, c.x + ribWidth + sway, ribY + 30);
         
-        // Aura kerangka luar (Outer Glow)
-        ctx.strokeStyle = `rgba(0, 255, 115, ${0.12 - i*0.02})`;
-        ctx.lineWidth = 22 + i * 3;
+        // Cahaya luar rusuk (Glow)
+        ctx.strokeStyle = `rgba(20, 255, 130, ${0.45 - i*0.07})`;
+        ctx.lineWidth = 22 + i * 2;
         ctx.lineCap = 'round';
         ctx.shadowColor = '#00ff73';
         ctx.shadowBlur = 25;
         ctx.stroke();
         
-        // Inti kerangka dalam (Inner Hot Plasma Core)
+        // Tulang dalam rusuk (Bone Core)
         ctx.beginPath();
         ctx.moveTo(c.x - ribWidth + sway, ribY + 30);
-        ctx.quadraticCurveTo(c.x + sway, ribY - 35, c.x + ribWidth + sway, ribY + 30);
-        ctx.strokeStyle = `rgba(150, 255, 190, ${0.4 - i*0.05})`;
-        ctx.lineWidth = 3;
-        ctx.shadowBlur = 10;
+        ctx.quadraticCurveTo(c.x + sway, ribY - 25, c.x + ribWidth + sway, ribY + 30);
+        ctx.strokeStyle = `rgba(200, 255, 220, ${0.85 - i*0.1})`;
+        ctx.lineWidth = 4;
+        ctx.shadowBlur = 5;
         ctx.stroke();
       }
       ctx.restore();
@@ -164,32 +166,35 @@
     function resize(){
       const r=canvas.getBoundingClientRect();
       w=Math.max(1,r.width);h=Math.max(1,r.height);
-      dpr=Math.min(window.devicePixelRatio||1,1.5); // Optimal untuk performa mobile
+      dpr=Math.min(window.devicePixelRatio||1,1.5);
       canvas.width=Math.round(w*dpr);canvas.height=Math.round(h*dpr);
       ctx.setTransform(dpr,0,0,dpr,0,0);
       
       particles = [];
-      const count = reduced ? 35 : 120; // Density partikel plasma
+      const count = reduced ? 30 : 100; 
       for(let i=0; i<count; i++) particles.push(new ChakraAura(true));
     }
 
     function frame(time){
       if(document.hidden){raf=0;return;}
-      let dt = time - last;
-      if(dt > 100) dt = 16;
-      if(dt < (reduced?45:16)){raf=requestAnimationFrame(frame);return;}
       
-      last=time;
+      // BUGFIX: Menyesuaikan timbangan waktu (Delta Time) secara aman
+      if(!last) last = time;
+      let dt = time - last;
+      if (reduced && dt < 45) { raf = requestAnimationFrame(frame); return; }
+      if (dt > 100) dt = 16; 
+      last = time;
+      
       ctx.clearRect(0,0,w,h);
       
-      // 1. Gambar tulang rusuk chakra terlebih dahulu
+      // 1. Gambar kerangka tulang bercahaya di latar belakang
       drawSkeletalCore(time);
       
-      // 2. Tumpuk dengan lapisan plasma & partikel ember di atasnya
-      particles.forEach(p => {
-        p.update(dt, time);
-        p.draw(ctx, time);
-      });
+      // 2. Render partikel plasma / wisp chakra
+      for(let i=0; i<particles.length; i++) {
+        particles[i].update(dt, time);
+        particles[i].draw(ctx, time);
+      }
       
       raf=requestAnimationFrame(frame);
     }
@@ -205,7 +210,6 @@
   }
   startChakraFlames();
   
-  // Ambient environmental embers
   for(let i=0;i<18;i++){const p=document.createElement('i');p.className='particle';p.style.left=(Math.random()*100)+'%';p.style.bottom=(-10-Math.random()*50)+'px';p.style.animationDelay=(-Math.random()*9)+'s';p.style.animationDuration=(7+Math.random()*8)+'s';$('particles').append(p)}
   document.body.dataset.theme=settings.theme||'shisui';$('themeSelect').value=settings.theme||'shisui';soundOn=settings.sound!==false;$('soundSetting').checked=soundOn;$('soundBtn').style.color=soundOn?'var(--accent)':'var(--muted)';angle=settings.angle||'DEG';$('angleSelect').value=angle;$('angleMode').textContent=angle;setScientific(!!settings.scientific);render();
 })();
