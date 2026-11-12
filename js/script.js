@@ -34,8 +34,11 @@
   function open(id){$(id).hidden=false}function close(id){$(id).hidden=true}document.querySelectorAll('[data-close]').forEach(b=>b.addEventListener('click',()=>close(b.dataset.close)));document.querySelectorAll('.overlay').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)close(o.id)}));
   function renderHistory(){const box=$('historyList');box.innerHTML='';if(!history.length){box.innerHTML='<div class="history-empty">Belum ada perhitungan tersimpan.</div>';return}history.forEach((h,i)=>{const item=document.createElement('div');item.className='history-item';const small=document.createElement('small');small.textContent=h.time+' · '+h.expression;const strong=document.createElement('strong');strong.textContent='= '+h.result;item.append(small,strong);item.addEventListener('click',()=>{input=h.result;expressionLine.textContent=h.expression+' =';justEvaluated=true;render();close('historyOverlay')});box.append(item)})}
   $('historyBtn').addEventListener('click',()=>{renderHistory();open('historyOverlay')});$('clearHistory').addEventListener('click',()=>{history=[];save();renderHistory();showToast('Riwayat dihapus')});$('settingsBtn').addEventListener('click',()=>open('settingsOverlay'));
-  // Organic Susanoo chakra fire — layered, tapered flame tongues.
-  // Deliberately avoids circular outlines/laser streaks; all effects are local Canvas.
+  
+  // =====================================================================
+  // NARUTO STORM STYLE SUSANOO CHAKRA ENGINE
+  // Realistic volumetric plasma, ethereal wisps, & pulsing skeletal ribs
+  // =====================================================================
   function startChakraFlames(){
     const canvas=$('chakraCanvas');
     if(!canvas)return;
@@ -43,146 +46,151 @@
     if(!ctx)return;
 
     const reduced=window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const palette=['#0bdc70','#20ff91','#83ffc0','#d8ffeb','#00a957'];
-    const anchors=[
-      [-.98,.10],[-.94,-.24],[-.82,-.52],[-.60,-.78],[-.30,-.94],
-      [.08,-1],[.42,-.90],[.70,-.72],[.90,-.43],[1,-.08],
-      [.98,.30],[.83,.60],[.56,.82],[.18,.96],[-.28,.93],[-.62,.76],[-.86,.49]
-    ];
-    let w=1,h=1,dpr=1,raf=0,last=0,embers=[],clock=0;
+    let w=1,h=1,dpr=1,raf=0,last=0;
+    let particles=[];
 
-    const center=()=>({x:w*.72,y:h*.56});
-    function spawn(initial=false){
-      const a=Math.random()*Math.PI*2,c=center();
-      return {
-        x:c.x+Math.cos(a)*w*.245,
-        y:c.y+Math.sin(a)*h*.405,
-        vx:(Math.random()-.5)*.38,
-        vy:-(.35+Math.random()*.9),
-        age:initial?Math.random():0,
-        life:1.0+Math.random()*1.5,
-        size:1.0+Math.random()*2.5,
-        sway:Math.random()*6.28,
-        color:palette[(Math.random()*palette.length)|0]
-      };
+    const center=()=>({x:w*.72,y:h*.56}); // Anchored to Susanoo image
+
+    class ChakraAura {
+      constructor(isInitial) {
+        this.reset(isInitial);
+      }
+      reset(isInitial) {
+        const c = center();
+        const angle = Math.random() * Math.PI * 2;
+        const radiusX = w * (0.15 + Math.random() * 0.18);
+        const radiusY = h * (0.25 + Math.random() * 0.22);
+        
+        this.x = c.x + Math.cos(angle) * radiusX;
+        this.y = c.y + Math.sin(angle) * radiusY;
+        
+        // Upward ethereal drift
+        this.vx = (Math.cos(angle) * 0.4) + (Math.random() - 0.5) * 1.2;
+        this.vy = -Math.random() * 2.5 - 0.5;
+        
+        this.life = isInitial ? Math.random() * 100 : 0;
+        this.maxLife = 50 + Math.random() * 70;
+        this.size = 5 + Math.random() * 25;
+        this.type = Math.random() > 0.85 ? 'ember' : 'plasma';
+        this.seed = Math.random() * 1000;
+      }
+      update(dt, time) {
+        this.life += dt;
+        // Ethereal turbulence (Simulasi aliran aura berasap)
+        this.vx += Math.sin(time * 0.0015 + this.seed) * 0.04;
+        this.vy -= 0.015; 
+        
+        this.x += this.vx * (dt/16);
+        this.y += this.vy * (dt/16);
+        
+        if (this.life >= this.maxLife || this.y < -50) {
+          this.reset(false);
+        }
+      }
+      draw(ctx, time) {
+        const progress = this.life / this.maxLife;
+        // Smooth fade in and out blending
+        const alpha = Math.max(0, Math.sin(progress * Math.PI)) * (this.type === 'ember' ? 0.9 : 0.45);
+        
+        ctx.save();
+        ctx.globalCompositeOperation = 'screen';
+        ctx.globalAlpha = alpha;
+        
+        if (this.type === 'ember') {
+          ctx.fillStyle = '#ccffdd';
+          ctx.shadowColor = '#00ff73';
+          ctx.shadowBlur = 12;
+          ctx.beginPath();
+          ctx.arc(this.x, this.y, this.size * 0.15, 0, Math.PI * 2);
+          ctx.fill();
+        } else {
+          // Plasma Wisp Layer
+          const sway = Math.sin(time * 0.002 + this.seed) * 15;
+          const stretch = 1 + progress * 2;
+          
+          // Radial gradient untuk efek chakra volumetrik ala Storm
+          const grad = ctx.createRadialGradient(this.x + sway, this.y, 0, this.x + sway, this.y, this.size);
+          grad.addColorStop(0, progress < 0.3 ? 'rgba(0, 230, 100, 1)' : 'rgba(51, 255, 153, 1)');
+          grad.addColorStop(0.4, 'rgba(0, 204, 85, 0.6)');
+          grad.addColorStop(1, 'rgba(0, 153, 68, 0)');
+          
+          ctx.fillStyle = grad;
+          ctx.beginPath();
+          ctx.ellipse(this.x + sway, this.y, this.size * 0.8, this.size * stretch, Math.sin(time*0.001 + this.seed) * 0.5, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.restore();
+      }
     }
-    function resize(){
-      const r=canvas.getBoundingClientRect();
-      w=Math.max(1,r.width);h=Math.max(1,r.height);
-      dpr=Math.min(window.devicePixelRatio||1,1.35);
-      canvas.width=Math.round(w*dpr);canvas.height=Math.round(h*dpr);
-      ctx.setTransform(dpr,0,0,dpr,0,0);
-      embers=Array.from({length:reduced?28:52},()=>spawn(true));
-    }
 
-    // A tapered, curved flame ribbon with a soft outer glow and a bright inner core.
-    function tongue(x,y,dx,dy,length,width,seed,time,layer){
-      const drift=Math.sin(time*.0018+seed*2.7)*(.10+layer*.025);
-      const sway=Math.sin(time*.0031+seed*1.9)*length*.12;
-      const nx=-dy,ny=dx;
-      const tipX=x+dx*length+nx*(sway+drift*length);
-      const tipY=y+dy*length+ny*(sway+drift*length);
-      const c1x=x+dx*length*.30+nx*(sway*.18+Math.sin(time*.004+seed)*width*.9);
-      const c1y=y+dy*length*.30+ny*(sway*.18+Math.sin(time*.004+seed)*width*.9);
-      const c2x=x+dx*length*.73+nx*(sway*.72+Math.cos(time*.003+seed)*width*.65);
-      const c2y=y+dy*length*.73+ny*(sway*.72+Math.cos(time*.003+seed)*width*.65);
-      const baseW=width*(.72+.22*Math.sin(time*.008+seed));
-      const midW=width*(.36+.16*Math.sin(time*.006+seed*1.4));
-
+    // Menggambar garis kerangka rusuk Susanoo yang bercahaya di latar belakang
+    function drawSkeletalCore(time) {
+      const c = center();
+      const pulse = 0.85 + 0.15 * Math.sin(time * 0.003);
+      
       ctx.save();
-      ctx.globalCompositeOperation='lighter';
-      ctx.beginPath();
-      ctx.moveTo(x-nx*baseW,y-ny*baseW);
-      ctx.bezierCurveTo(c1x-nx*baseW*.82,c1y-ny*baseW*.82,
-        c2x-nx*midW,c2y-ny*midW,tipX,tipY);
-      ctx.bezierCurveTo(c2x+nx*midW*.72,c2y+ny*midW*.72,
-        c1x+nx*baseW*.72,c1y+ny*baseW*.72,x+nx*baseW,y+ny*baseW);
-      ctx.closePath();
-
-      const grad=ctx.createLinearGradient(x,y,tipX,tipY);
-      grad.addColorStop(0,'rgba(4,150,73,.06)');
-      grad.addColorStop(.20,layer===0?'rgba(13,224,105,.36)':'rgba(29,255,145,.48)');
-      grad.addColorStop(.62,layer===0?'rgba(69,255,164,.58)':'rgba(135,255,195,.62)');
-      grad.addColorStop(1,'rgba(225,255,239,0)');
-      ctx.fillStyle=grad;
-      ctx.shadowColor=layer===0?'#00e878':'#8dffc4';
-      ctx.shadowBlur=width*(layer===0?2.8:1.8);
-      ctx.fill();
-
-      // Thin, irregular hot core; its curve follows the flame instead of forming a ring.
-      ctx.beginPath();
-      ctx.moveTo(x,y);
-      ctx.quadraticCurveTo(c1x,c1y,(c2x+tipX)*.5,(c2y+tipY)*.5);
-      ctx.quadraticCurveTo(c2x,c2y,tipX,tipY);
-      ctx.strokeStyle=layer===0?'rgba(90,255,165,.42)':'rgba(224,255,239,.76)';
-      ctx.lineWidth=Math.max(.7,width*.13);
-      ctx.shadowColor='#baffd9';ctx.shadowBlur=7;ctx.stroke();
+      ctx.globalCompositeOperation = 'screen';
+      
+      // Render 4 lapis tulang rusuk chakra
+      for(let i=0; i<4; i++) {
+        const ribY = c.y - h * 0.05 - (i * h * 0.12);
+        const ribWidth = w * (0.28 - i * 0.04) * pulse;
+        const sway = Math.sin(time * 0.002 + i) * 8;
+        
+        ctx.beginPath();
+        ctx.moveTo(c.x - ribWidth + sway, ribY + 30);
+        ctx.quadraticCurveTo(c.x + sway, ribY - 35, c.x + ribWidth + sway, ribY + 30);
+        
+        // Aura kerangka luar (Outer Glow)
+        ctx.strokeStyle = `rgba(0, 255, 115, ${0.12 - i*0.02})`;
+        ctx.lineWidth = 22 + i * 3;
+        ctx.lineCap = 'round';
+        ctx.shadowColor = '#00ff73';
+        ctx.shadowBlur = 25;
+        ctx.stroke();
+        
+        // Inti kerangka dalam (Inner Hot Plasma Core)
+        ctx.beginPath();
+        ctx.moveTo(c.x - ribWidth + sway, ribY + 30);
+        ctx.quadraticCurveTo(c.x + sway, ribY - 35, c.x + ribWidth + sway, ribY + 30);
+        ctx.strokeStyle = `rgba(150, 255, 190, ${0.4 - i*0.05})`;
+        ctx.lineWidth = 3;
+        ctx.shadowBlur = 10;
+        ctx.stroke();
+      }
       ctx.restore();
     }
 
-    function drawFire(time){
-      const c=center();
-      // Fire hugs the guardian's outer silhouette. Each plume rises and leans with its side.
-      anchors.forEach((a,i)=>{
-        const bx=c.x+a[0]*w*.245;
-        const by=c.y+a[1]*h*.405;
-        const side=a[0];
-        const upward=.58+Math.max(0,a[1])*.48;
-        const outward=Math.sign(side||1)*(.22+Math.abs(side)*.38);
-        let dx=outward,dy=-upward;
-        const norm=Math.hypot(dx,dy)||1;dx/=norm;dy/=norm;
-        const pulse=.78+.22*Math.sin(time*.004+i*2.13);
-        const baseLength=h*(.075+(.025*Math.sin(i*4.2)))*pulse;
-        // Two offset tongues per anchor create a layered, turbulent flame silhouette.
-        tongue(bx,by,dx,dy,baseLength*1.24,5.5+(i%4)*1.25,i+.2,time,0);
-        if(i%2===0){
-          tongue(bx+side*2,by+3,dx*.88-.12,dy,baseLength*.78,3.2+(i%3),i+8.4,time,1);
-        }
-      });
-
-      // A few broad, soft flame sheets sweep upward behind the side edges.
-      for(let side of [-1,1]){
-        for(let k=0;k<3;k++){
-          const x=c.x+side*w*(.245+k*.018);
-          const y=c.y+h*(.22-k*.17);
-          const sway=Math.sin(time*.0015+k*2.4+side)*w*.035;
-          ctx.save();
-          ctx.globalCompositeOperation='lighter';
-          ctx.beginPath();
-          ctx.moveTo(x,y+h*.12);
-          ctx.bezierCurveTo(x+side*w*.04+sway,y-h*.02,
-            x-side*w*.035-sway,y-h*.20,
-            x+side*w*.025+sway,y-h*(.31+k*.025));
-          ctx.strokeStyle=k===1?'rgba(34,255,145,.20)':'rgba(40,226,125,.12)';
-          ctx.lineWidth=7-k*1.5;ctx.lineCap='round';
-          ctx.shadowColor='#13ff83';ctx.shadowBlur=18;ctx.stroke();
-          ctx.restore();
-        }
-      }
+    function resize(){
+      const r=canvas.getBoundingClientRect();
+      w=Math.max(1,r.width);h=Math.max(1,r.height);
+      dpr=Math.min(window.devicePixelRatio||1,1.5); // Optimal untuk performa mobile
+      canvas.width=Math.round(w*dpr);canvas.height=Math.round(h*dpr);
+      ctx.setTransform(dpr,0,0,dpr,0,0);
+      
+      particles = [];
+      const count = reduced ? 35 : 120; // Density partikel plasma
+      for(let i=0; i<count; i++) particles.push(new ChakraAura(true));
     }
 
     function frame(time){
       if(document.hidden){raf=0;return;}
-      if(time-last<(reduced?55:30)){raf=requestAnimationFrame(frame);return;}
-      last=time;clock+=reduced?.012:.026;
+      let dt = time - last;
+      if(dt > 100) dt = 16;
+      if(dt < (reduced?45:16)){raf=requestAnimationFrame(frame);return;}
+      
+      last=time;
       ctx.clearRect(0,0,w,h);
-      drawFire(time);
-
-      // Ember fragments detach from the flame edges and rise with a gentle turbulent drift.
-      for(let i=0;i<embers.length;i++){
-        const p=embers[i];
-        p.age+=reduced?.012:.022;
-        p.x+=p.vx+Math.sin(time*.0018+p.sway)*.42;
-        p.y+=p.vy;
-        const fade=Math.max(0,Math.sin(Math.min(1,p.age/p.life)*Math.PI));
-        ctx.save();
-        ctx.globalAlpha=fade*(reduced?.34:.68);
-        ctx.fillStyle=p.color;ctx.shadowColor=p.color;ctx.shadowBlur=9;
-        ctx.beginPath();
-        ctx.ellipse(p.x,p.y,p.size*.55,p.size*1.9,-.28,0,Math.PI*2);
-        ctx.fill();ctx.restore();
-        if(p.age>=p.life||p.y<0)embers[i]=spawn();
-      }
+      
+      // 1. Gambar tulang rusuk chakra terlebih dahulu
+      drawSkeletalCore(time);
+      
+      // 2. Tumpuk dengan lapisan plasma & partikel ember di atasnya
+      particles.forEach(p => {
+        p.update(dt, time);
+        p.draw(ctx, time);
+      });
+      
       raf=requestAnimationFrame(frame);
     }
 
@@ -196,7 +204,8 @@
     raf=requestAnimationFrame(frame);
   }
   startChakraFlames();
-  // Lightweight ambient ember particles; all artwork is bundled locally.
+  
+  // Ambient environmental embers
   for(let i=0;i<18;i++){const p=document.createElement('i');p.className='particle';p.style.left=(Math.random()*100)+'%';p.style.bottom=(-10-Math.random()*50)+'px';p.style.animationDelay=(-Math.random()*9)+'s';p.style.animationDuration=(7+Math.random()*8)+'s';$('particles').append(p)}
   document.body.dataset.theme=settings.theme||'shisui';$('themeSelect').value=settings.theme||'shisui';soundOn=settings.sound!==false;$('soundSetting').checked=soundOn;$('soundBtn').style.color=soundOn?'var(--accent)':'var(--muted)';angle=settings.angle||'DEG';$('angleSelect').value=angle;$('angleMode').textContent=angle;setScientific(!!settings.scientific);render();
 })();
