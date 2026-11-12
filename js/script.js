@@ -34,108 +34,163 @@
   function open(id){$(id).hidden=false}function close(id){$(id).hidden=true}document.querySelectorAll('[data-close]').forEach(b=>b.addEventListener('click',()=>close(b.dataset.close)));document.querySelectorAll('.overlay').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)close(o.id)}));
   function renderHistory(){const box=$('historyList');box.innerHTML='';if(!history.length){box.innerHTML='<div class="history-empty">Belum ada perhitungan tersimpan.</div>';return}history.forEach((h,i)=>{const item=document.createElement('div');item.className='history-item';const small=document.createElement('small');small.textContent=h.time+' · '+h.expression;const strong=document.createElement('strong');strong.textContent='= '+h.result;item.append(small,strong);item.addEventListener('click',()=>{input=h.result;expressionLine.textContent=h.expression+' =';justEvaluated=true;render();close('historyOverlay')});box.append(item)})}
   $('historyBtn').addEventListener('click',()=>{renderHistory();open('historyOverlay')});$('clearHistory').addEventListener('click',()=>{history=[];save();renderHistory();showToast('Riwayat dihapus')});$('settingsBtn').addEventListener('click',()=>open('settingsOverlay'));
-  // Living Susanoo: high-visibility chakra flames drawn locally on Canvas.
-  // Canvas is a sibling above the hero vignette so WebView stacking cannot hide it.
+  // Organic Susanoo chakra fire — layered, tapered flame tongues.
+  // Deliberately avoids circular outlines/laser streaks; all effects are local Canvas.
   function startChakraFlames(){
     const canvas=$('chakraCanvas');
     if(!canvas)return;
     const ctx=canvas.getContext('2d');
     if(!ctx)return;
+
     const reduced=window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const colors=['#13ff83','#5bffb0','#c4ffe5','#00d878','#edfff6'];
-    let w=0,h=0,dpr=1,raf=0,last=0,particles=[],phase=0;
-    function point(a,rx,ry,scale=1){
-      return {x:w*.72+Math.cos(a)*rx*scale,y:h*.55+Math.sin(a)*ry*scale};
-    }
+    const palette=['#0bdc70','#20ff91','#83ffc0','#d8ffeb','#00a957'];
+    const anchors=[
+      [-.98,.10],[-.94,-.24],[-.82,-.52],[-.60,-.78],[-.30,-.94],
+      [.08,-1],[.42,-.90],[.70,-.72],[.90,-.43],[1,-.08],
+      [.98,.30],[.83,.60],[.56,.82],[.18,.96],[-.28,.93],[-.62,.76],[-.86,.49]
+    ];
+    let w=1,h=1,dpr=1,raf=0,last=0,embers=[],clock=0;
+
+    const center=()=>({x:w*.72,y:h*.56});
     function spawn(initial=false){
-      const a=Math.random()*Math.PI*2;
-      const q=point(a,w*.255,h*.435,1.02+Math.random()*.08);
-      return {x:q.x,y:q.y,vx:(Math.random()-.5)*.65,vy:-(.35+Math.random()*1.25),
-        age:initial?Math.random()*.9:0,life:.7+Math.random()*1.25,
-        size:1.4+Math.random()*3.1,phase:Math.random()*Math.PI*2,
-        color:colors[(Math.random()*colors.length)|0]};
+      const a=Math.random()*Math.PI*2,c=center();
+      return {
+        x:c.x+Math.cos(a)*w*.245,
+        y:c.y+Math.sin(a)*h*.405,
+        vx:(Math.random()-.5)*.38,
+        vy:-(.35+Math.random()*.9),
+        age:initial?Math.random():0,
+        life:1.0+Math.random()*1.5,
+        size:1.0+Math.random()*2.5,
+        sway:Math.random()*6.28,
+        color:palette[(Math.random()*palette.length)|0]
+      };
     }
     function resize(){
       const r=canvas.getBoundingClientRect();
       w=Math.max(1,r.width);h=Math.max(1,r.height);
-      dpr=Math.min(window.devicePixelRatio||1,1.25);
+      dpr=Math.min(window.devicePixelRatio||1,1.35);
       canvas.width=Math.round(w*dpr);canvas.height=Math.round(h*dpr);
       ctx.setTransform(dpr,0,0,dpr,0,0);
-      particles=Array.from({length:reduced?42:86},()=>spawn(true));
+      embers=Array.from({length:reduced?28:52},()=>spawn(true));
     }
-    function flame(a,t,index){
-      const pulse=1+Math.sin(t*.003+index*1.7)*.09;
-      const base=point(a,w*.245,h*.425,pulse);
-      const tip=point(a+Math.sin(t*.002+index)*.12,w*.245,h*.425,1.12+(.12+.12*Math.sin(t*.006+index)));
-      const tangent={x:-Math.sin(a),y:Math.cos(a)};
-      const spread=7+Math.sin(t*.005+index)*3;
-      ctx.beginPath();ctx.moveTo(base.x-tangent.x*spread,base.y-tangent.y*spread);
-      ctx.quadraticCurveTo(base.x+tangent.x*spread*1.8+Math.cos(t*.004+index)*5,
-        base.y+tangent.y*spread*1.8-9,tip.x,tip.y);
-      ctx.quadraticCurveTo(base.x-tangent.x*spread*1.5-Math.sin(t*.004+index)*5,
-        base.y-tangent.y*spread*1.5+8,base.x-tangent.x*spread,base.y-tangent.y*spread);
+
+    // A tapered, curved flame ribbon with a soft outer glow and a bright inner core.
+    function tongue(x,y,dx,dy,length,width,seed,time,layer){
+      const drift=Math.sin(time*.0018+seed*2.7)*(.10+layer*.025);
+      const sway=Math.sin(time*.0031+seed*1.9)*length*.12;
+      const nx=-dy,ny=dx;
+      const tipX=x+dx*length+nx*(sway+drift*length);
+      const tipY=y+dy*length+ny*(sway+drift*length);
+      const c1x=x+dx*length*.30+nx*(sway*.18+Math.sin(time*.004+seed)*width*.9);
+      const c1y=y+dy*length*.30+ny*(sway*.18+Math.sin(time*.004+seed)*width*.9);
+      const c2x=x+dx*length*.73+nx*(sway*.72+Math.cos(time*.003+seed)*width*.65);
+      const c2y=y+dy*length*.73+ny*(sway*.72+Math.cos(time*.003+seed)*width*.65);
+      const baseW=width*(.72+.22*Math.sin(time*.008+seed));
+      const midW=width*(.36+.16*Math.sin(time*.006+seed*1.4));
+
+      ctx.save();
+      ctx.globalCompositeOperation='lighter';
+      ctx.beginPath();
+      ctx.moveTo(x-nx*baseW,y-ny*baseW);
+      ctx.bezierCurveTo(c1x-nx*baseW*.82,c1y-ny*baseW*.82,
+        c2x-nx*midW,c2y-ny*midW,tipX,tipY);
+      ctx.bezierCurveTo(c2x+nx*midW*.72,c2y+ny*midW*.72,
+        c1x+nx*baseW*.72,c1y+ny*baseW*.72,x+nx*baseW,y+ny*baseW);
       ctx.closePath();
-      ctx.fillStyle=index%3===0?'rgba(196,255,229,.52)':'rgba(35,255,139,.34)';
-      ctx.shadowColor='#35ff9b';ctx.shadowBlur=16;ctx.fill();
-      ctx.beginPath();ctx.moveTo(base.x,base.y);
-      ctx.quadraticCurveTo((base.x+tip.x)/2+tangent.x*spread*.45,
-        (base.y+tip.y)/2+tangent.y*spread*.45,tip.x,tip.y);
-      ctx.strokeStyle=index%4===0?'rgba(239,255,247,.95)':'rgba(75,255,167,.92)';
-      ctx.lineWidth=1.5+Math.sin(t*.01+index)*.65;ctx.shadowBlur=13;ctx.stroke();
-    }
-    function frame(time){
-      if(document.hidden){raf=0;return}
-      if(time-last<(reduced?65:28)){raf=requestAnimationFrame(frame);return}
-      last=time;phase+=reduced?.012:.032;
-      ctx.clearRect(0,0,w,h);
-      // Several bright, broken energy rings hugging the Susanoo silhouette.
-      ctx.save();ctx.globalCompositeOperation='lighter';
-      for(let layer=0;layer<3;layer++){
-        ctx.beginPath();
-        const rx=w*(.235+layer*.012),ry=h*(.415+layer*.018);
-        for(let i=0;i<=100;i++){
-          const a=i/100*Math.PI*2;
-          const wobble=1+.018*Math.sin(a*9+phase*2+layer);
-          const q=point(a,rx,ry,wobble);
-          if(i===0)ctx.moveTo(q.x,q.y);else ctx.lineTo(q.x,q.y);
-        }
-        ctx.strokeStyle=layer===1?'rgba(191,255,224,.5)':'rgba(35,255,137,.38)';
-        ctx.lineWidth=layer===1?1.6:3.2-layer*.6;ctx.shadowColor='#20ff91';ctx.shadowBlur=layer===1?18:25;ctx.stroke();
-      }
-      // Large animated flame tongues all around the guardian, not just tiny sparks.
-      const count=reduced?15:23;
-      for(let i=0;i<count;i++)flame(i/count*Math.PI*2+phase*.12,time,i);
+
+      const grad=ctx.createLinearGradient(x,y,tipX,tipY);
+      grad.addColorStop(0,'rgba(4,150,73,.06)');
+      grad.addColorStop(.20,layer===0?'rgba(13,224,105,.36)':'rgba(29,255,145,.48)');
+      grad.addColorStop(.62,layer===0?'rgba(69,255,164,.58)':'rgba(135,255,195,.62)');
+      grad.addColorStop(1,'rgba(225,255,239,0)');
+      ctx.fillStyle=grad;
+      ctx.shadowColor=layer===0?'#00e878':'#8dffc4';
+      ctx.shadowBlur=width*(layer===0?2.8:1.8);
+      ctx.fill();
+
+      // Thin, irregular hot core; its curve follows the flame instead of forming a ring.
+      ctx.beginPath();
+      ctx.moveTo(x,y);
+      ctx.quadraticCurveTo(c1x,c1y,(c2x+tipX)*.5,(c2y+tipY)*.5);
+      ctx.quadraticCurveTo(c2x,c2y,tipX,tipY);
+      ctx.strokeStyle=layer===0?'rgba(90,255,165,.42)':'rgba(224,255,239,.76)';
+      ctx.lineWidth=Math.max(.7,width*.13);
+      ctx.shadowColor='#baffd9';ctx.shadowBlur=7;ctx.stroke();
       ctx.restore();
-      // Flying embers rise from the flame ring.
-      for(let i=0;i<particles.length;i++){
-        const q=particles[i];q.age+=reduced?.012:.026;
-        q.x+=q.vx+Math.sin(time*.0025+q.phase)*.48;
-        q.y+=q.vy;
-        const f=Math.max(0,Math.sin(Math.min(1,q.age/q.life)*Math.PI));
-        ctx.save();ctx.globalAlpha=f*(reduced?.48:.9);
-        ctx.fillStyle=q.color;ctx.shadowColor=q.color;ctx.shadowBlur=14;
-        ctx.beginPath();ctx.ellipse(q.x,q.y,q.size*.75,q.size*2.8,-.35,0,Math.PI*2);ctx.fill();
-        ctx.restore();
-        if(q.age>=q.life||q.y<2)particles[i]=spawn();
+    }
+
+    function drawFire(time){
+      const c=center();
+      // Fire hugs the guardian's outer silhouette. Each plume rises and leans with its side.
+      anchors.forEach((a,i)=>{
+        const bx=c.x+a[0]*w*.245;
+        const by=c.y+a[1]*h*.405;
+        const side=a[0];
+        const upward=.58+Math.max(0,a[1])*.48;
+        const outward=Math.sign(side||1)*(.22+Math.abs(side)*.38);
+        let dx=outward,dy=-upward;
+        const norm=Math.hypot(dx,dy)||1;dx/=norm;dy/=norm;
+        const pulse=.78+.22*Math.sin(time*.004+i*2.13);
+        const baseLength=h*(.075+(.025*Math.sin(i*4.2)))*pulse;
+        // Two offset tongues per anchor create a layered, turbulent flame silhouette.
+        tongue(bx,by,dx,dy,baseLength*1.24,5.5+(i%4)*1.25,i+.2,time,0);
+        if(i%2===0){
+          tongue(bx+side*2,by+3,dx*.88-.12,dy,baseLength*.78,3.2+(i%3),i+8.4,time,1);
+        }
+      });
+
+      // A few broad, soft flame sheets sweep upward behind the side edges.
+      for(let side of [-1,1]){
+        for(let k=0;k<3;k++){
+          const x=c.x+side*w*(.245+k*.018);
+          const y=c.y+h*(.22-k*.17);
+          const sway=Math.sin(time*.0015+k*2.4+side)*w*.035;
+          ctx.save();
+          ctx.globalCompositeOperation='lighter';
+          ctx.beginPath();
+          ctx.moveTo(x,y+h*.12);
+          ctx.bezierCurveTo(x+side*w*.04+sway,y-h*.02,
+            x-side*w*.035-sway,y-h*.20,
+            x+side*w*.025+sway,y-h*(.31+k*.025));
+          ctx.strokeStyle=k===1?'rgba(34,255,145,.20)':'rgba(40,226,125,.12)';
+          ctx.lineWidth=7-k*1.5;ctx.lineCap='round';
+          ctx.shadowColor='#13ff83';ctx.shadowBlur=18;ctx.stroke();
+          ctx.restore();
+        }
       }
-      // Bright chakra flashes orbit the perimeter to make motion obvious on phone screens.
-      for(let j=0;j<7;j++){
-        const a=time*(reduced?.00018:.00042)+j*Math.PI*2/7;
-        const q=point(a,w*.25,h*.43,1.06);
-        const r=4+2*Math.sin(time*.01+j);
-        const g=ctx.createRadialGradient(q.x,q.y,0,q.x,q.y,r*3);
-        g.addColorStop(0,'rgba(230,255,244,.95)');
-        g.addColorStop(.25,'rgba(56,255,153,.8)');
-        g.addColorStop(1,'rgba(20,255,130,0)');
-        ctx.fillStyle=g;ctx.beginPath();ctx.arc(q.x,q.y,r*3,0,Math.PI*2);ctx.fill();
+    }
+
+    function frame(time){
+      if(document.hidden){raf=0;return;}
+      if(time-last<(reduced?55:30)){raf=requestAnimationFrame(frame);return;}
+      last=time;clock+=reduced?.012:.026;
+      ctx.clearRect(0,0,w,h);
+      drawFire(time);
+
+      // Ember fragments detach from the flame edges and rise with a gentle turbulent drift.
+      for(let i=0;i<embers.length;i++){
+        const p=embers[i];
+        p.age+=reduced?.012:.022;
+        p.x+=p.vx+Math.sin(time*.0018+p.sway)*.42;
+        p.y+=p.vy;
+        const fade=Math.max(0,Math.sin(Math.min(1,p.age/p.life)*Math.PI));
+        ctx.save();
+        ctx.globalAlpha=fade*(reduced?.34:.68);
+        ctx.fillStyle=p.color;ctx.shadowColor=p.color;ctx.shadowBlur=9;
+        ctx.beginPath();
+        ctx.ellipse(p.x,p.y,p.size*.55,p.size*1.9,-.28,0,Math.PI*2);
+        ctx.fill();ctx.restore();
+        if(p.age>=p.life||p.y<0)embers[i]=spawn();
       }
       raf=requestAnimationFrame(frame);
     }
+
     resize();
     if('ResizeObserver' in window)new ResizeObserver(resize).observe(canvas);
     else window.addEventListener('resize',resize,{passive:true});
     document.addEventListener('visibilitychange',()=>{
-      if(document.hidden){if(raf)cancelAnimationFrame(raf);raf=0}
+      if(document.hidden){if(raf)cancelAnimationFrame(raf);raf=0;}
       else if(!raf)raf=requestAnimationFrame(frame);
     });
     raf=requestAnimationFrame(frame);

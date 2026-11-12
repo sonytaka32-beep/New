@@ -1,7 +1,7 @@
 {
-  "name": "shisui-calc-v4",
+  "name": "shisui-calc-v6",
   "displayName": "Shisui Calc",
-  "version": "5.0.0",
+  "version": "6.0.0",
   "description": "Offline calculator with scientific mode, history, sounds and a Shisui-inspired Susanoo theme.",
   "main": "index.html",
   "scripts": {

@@ -1,15 +1,15 @@
-# Shisui Calc 5.0 — Living Susanoo Edition
+# Shisui Calc 6.0 — Natural Chakra Flame Edition
 
-Offline Cordova calculator with scientific functions, history and Uchiha themes.
+Offline Cordova calculator with scientific mode, history, local themes and an animated Susanoo hero.
 
-## New in 5.0
-- Bright, animated emerald chakra flame tongues around the Susanoo silhouette.
-- Three animated energy rings and orbiting chakra flashes.
-- Larger rising embers and visible flame streaks.
-- Canvas is layered above the hero vignette to remain visible in Android WebView.
-- Reduced-motion preference slows the animation instead of disabling it.
-- Animation pauses while the app is backgrounded.
-- No external APIs, CDN, npm dependencies or new Cordova plugins.
+## Visual changes in 6.0
+- Replaced the circular/laser-like chakra outline with organic tapered flame ribbons.
+- Curved flame tongues rise and lean around the Susanoo silhouette.
+- Multiple translucent flame layers create depth.
+- Flame tips sway and flicker at different phases for less mechanical movement.
+- Soft side plumes and detached embers add motion without covering the calculator.
+- Reduced-motion preference slows rather than disables the visual effect.
+- All animation is local Canvas; no API, CDN, npm dependency or Cordova plugin was added.
 
 ## Build compatibility
-The GitHub Actions workflow is intentionally kept identical to the successful v4 run: same Ubuntu, Node, Java, Cordova, Android platform, SDK, build command and artifact name.
+The `.github/workflows/build-apk.yml` file is preserved unchanged from the previously successful workflow. Ubuntu, Node, Java, Cordova, Android SDK/platform versions, build command and artifact name are unchanged.
