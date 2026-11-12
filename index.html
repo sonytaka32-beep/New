@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+  <meta name="theme-color" content="#08070d">
+  <meta name="description" content="Shisui Calc 2.0 — kalkulator anime offline dengan mode scientific, tema Uchiha, dan riwayat.">
+  <title>Shisui Calc 2.0</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body data-theme="shisui">
+  <div class="ambient ambient-a" aria-hidden="true"></div>
+  <div class="ambient ambient-b" aria-hidden="true"></div>
+  <div class="particles" id="particles" aria-hidden="true"></div>
+  <header class="topbar">
+    <div class="brand"><span class="brand-mark">写</span><div><strong>SHISUI <span>CALC</span></strong><small>UCHIHA EDITION · 2.0</small></div></div>
+    <div class="top-actions">
+      <button class="icon-btn" id="soundBtn" aria-label="Suara aktif/nonaktif" title="Suara">♪</button>
+      <button class="icon-btn" id="historyBtn" aria-label="Riwayat" title="Riwayat">◷</button>
+      <button class="icon-btn" id="settingsBtn" aria-label="Pengaturan" title="Pengaturan">⚙</button>
+    </div>
+  </header>
+
+  <main class="app-shell">
+    <section class="hero" aria-label="Mangekyou Sharingan">
+      <div class="eye eye-large" aria-hidden="true"><div class="eye-ring ring-one"></div><div class="eye-ring ring-two"></div><div class="eye-pupil"></div><i class="tomoe tomoe-one"></i><i class="tomoe tomoe-two"></i><i class="tomoe tomoe-three"></i></div>
+      <div class="hero-copy"><span class="eyebrow">火影 · WILL OF FIRE</span><h1>Focus your <em>power.</em></h1><p>Precision in every calculation.</p></div>
+      <div class="hero-status"><span class="status-dot"></span> OFFLINE READY</div>
+    </section>
+
+    <section class="calculator" aria-label="Kalkulator">
+      <div class="calc-head"><span>CALCULATION TERMINAL</span><button id="scientificToggle" class="mode-chip" aria-pressed="false">SCI <span>OFF</span></button></div>
+      <div class="display-wrap">
+        <div id="expression" class="expression" aria-live="polite">&nbsp;</div>
+        <div id="display" class="display" aria-live="polite">0</div>
+      </div>
+      <div id="scientificKeys" class="keys scientific-keys" hidden>
+        <button data-value="sin(" class="function">sin</button><button data-value="cos(" class="function">cos</button><button data-value="tan(" class="function">tan</button><button data-value="sqrt(" class="function">√</button>
+        <button data-value="log(" class="function">log</button><button data-value="ln(" class="function">ln</button><button data-value="(" class="function">(</button><button data-value=")" class="function">)</button>
+        <button data-value="π" class="function">π</button><button data-value="e" class="function">e</button><button data-value="^" class="function">xʸ</button><button data-value="!" class="function">x!</button>
+      </div>
+      <div class="keys main-keys">
+        <button data-action="clear" class="utility danger">AC</button><button data-action="delete" class="utility">⌫</button><button data-value="%" class="utility">%</button><button data-value="÷" class="operator">÷</button>
+        <button data-value="7">7</button><button data-value="8">8</button><button data-value="9">9</button><button data-value="×" class="operator">×</button>
+        <button data-value="4">4</button><button data-value="5">5</button><button data-value="6">6</button><button data-value="−" class="operator">−</button>
+        <button data-value="1">1</button><button data-value="2">2</button><button data-value="3">3</button><button data-value="+" class="operator">+</button>
+        <button data-action="sign" class="utility">±</button><button data-value="0" class="zero">0</button><button data-value=".">.</button><button data-action="equals" class="equals">=</button>
+      </div>
+      <div class="calc-foot"><span><i></i> LOCAL COMPUTATION</span><span id="angleMode">DEG</span></div>
+    </section>
+    <footer class="footer"><span>SHISUI UCHIHA</span><span class="footer-symbol">卍</span><span>POWER · CONTROL · PRECISION</span></footer>
+  </main>
+
+  <div class="overlay" id="historyOverlay" hidden><section class="dialog"><div class="dialog-head"><div><small>YOUR RECORDS</small><h2>Calculation history</h2></div><button class="close-btn" data-close="historyOverlay">×</button></div><div id="historyList" class="history-list"></div><div class="dialog-actions"><button id="clearHistory" class="text-btn">Clear history</button><button class="solid-btn" data-close="historyOverlay">Done</button></div></section></div>
+  <div class="overlay" id="settingsOverlay" hidden><section class="dialog"><div class="dialog-head"><div><small>PERSONALIZE</small><h2>Settings</h2></div><button class="close-btn" data-close="settingsOverlay">×</button></div><label class="setting-label" for="themeSelect">Visual theme</label><select id="themeSelect" class="theme-select"><option value="shisui">Shisui · Emerald</option><option value="itachi">Itachi · Crimson</option><option value="madara">Madara · Violet</option><option value="sasuke">Sasuke · Azure</option></select><label class="setting-row"><span>Scientific calculator</span><input id="scientificSetting" type="checkbox"></label><label class="setting-row"><span>Button sounds</span><input id="soundSetting" type="checkbox" checked></label><label class="setting-row"><span>Angle unit</span><select id="angleSelect" class="small-select"><option value="DEG">Degrees</option><option value="RAD">Radians</option></select></label><div class="dialog-actions"><button class="solid-btn" data-close="settingsOverlay">Done</button></div></section></div>
+  <div id="toast" class="toast" role="status"></div>
+  <script src="js/script.js"></script>
+</body>
+</html>
