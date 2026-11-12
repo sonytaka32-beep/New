@@ -1,8 +1,8 @@
 {
-  "name": "shisui-calc-v2",
-  "displayName": "Shisui Calc 2",
-  "version": "2.0.0",
-  "description": "Offline anime-inspired calculator with scientific mode, history, sound and Uchiha themes.",
+  "name": "shisui-calc-v3",
+  "displayName": "Shisui Calc",
+  "version": "3.0.0",
+  "description": "Offline calculator with scientific mode, history, sounds and a Shisui-inspired Susanoo theme.",
   "main": "index.html",
   "scripts": {
     "serve": "cordova serve",
@@ -12,7 +12,9 @@
     "cordova": "^12.0.0"
   },
   "cordova": {
-    "platforms": ["android"],
+    "platforms": [
+      "android"
+    ],
     "plugins": {}
   }
 }

@@ -1,22 +1,24 @@
-# Shisui Calc 2.0
+# Shisui Calc 3.0 — Susanoo Edition
 
-A community-developed enhancement of the public Shisui Calc repository. Built with HTML5, CSS3, vanilla JavaScript and Apache Cordova. The app works offline and has no external runtime dependencies.
+A visual and UX refresh of the community Shisui Calc project. Built with HTML5, CSS3, vanilla JavaScript and Apache Cordova. The app remains offline-first: calculator logic, settings, history, CSS and artwork are bundled locally.
 
-## Features
-- Responsive dark anime-inspired interface and animated Sharingan-inspired ornament.
-- Four color themes: Shisui (emerald), Itachi (crimson), Madara (violet), Sasuke (azure).
-- Standard arithmetic, parentheses, percentages, sign toggle and keyboard support.
-- Scientific mode: sin, cos, tan, sqrt, log, ln, constants π/e, exponent and factorial.
-- DEG/RAD angle selection.
-- Local calculation history and settings persisted on the device.
-- Optional synthesized button sound; no audio files or network calls.
-- Reduced-motion support and safe-area layout for modern Android devices.
-
-## Run in a browser
-Open `index.html` in a modern browser. For best testing, serve the folder over localhost.
+## Changes in 3.0
+- Reworked emerald/charcoal visual system with clearer hierarchy and higher contrast.
+- Added a locally bundled Shisui-inspired ninja and emerald guardian artwork at `assets/shisui-susanoo.png`.
+- Redesigned hero, calculator panel, keys, display and responsive spacing for Android phones.
+- Kept the existing calculator parser, scientific functions, local history, theme options and sound controls.
+- Bumped the settings storage key to v3 so the Shisui emerald theme is selected by default after upgrade; calculation history is retained.
+- Preserved the known-good GitHub Actions build toolchain from successful run `0d0492d`: Ubuntu 22.04, Node 20, Java 17, Cordova 12.0.0, Android platform 13.0.0, Android SDK 34 and build-tools 34.0.0.
+- The workflow still creates a fresh Cordova project and copies `index.html`, `css`, `js`, and `config.xml`; it now additionally copies `assets/`. It intentionally does not copy the previously empty `res/*` path that caused the earlier workflow issue.
 
 ## Build Android APK
-Install Node.js 20, Java 17, Android SDK, then:
+Push to `main` or run the workflow manually from GitHub Actions. The artifact is `shisui-calc-v3-debug-apk`.
+
+The workflow outputs:
+`build/platforms/android/app/build/outputs/apk/debug/app-debug.apk`
+
+## Local build
+Requires Node.js 20, Java 17, Android SDK and Cordova 12:
 
 ```bash
 npm install
@@ -24,12 +26,7 @@ cordova platform add android@13.0.0
 cordova build android --debug
 ```
 
-The debug APK is generated at:
-`platforms/android/app/build/outputs/apk/debug/app-debug.apk`
-
-A GitHub Actions workflow builds the APK on pushes to `main` and on manual dispatch.
-
 ## Notes
-- All calculation, history and preferences remain on-device; there is no analytics or server API.
-- The expression parser is implemented locally and does not use `eval()`.
-- This is an independent community modification. Verify the upstream repository's licensing and retain required notices before redistributing upstream material. Naruto/Uchiha names and related franchise elements belong to their respective rights holders.
+- No remote image URLs, web fonts, analytics or runtime APIs are required.
+- The artwork is bundled in the app, so it displays offline.
+- This is a fan-made community modification. Shisui Uchiha and Naruto franchise names/characters are owned by their respective rights holders. Check the upstream repository license and retain applicable notices before redistribution.

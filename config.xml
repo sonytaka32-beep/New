@@ -1,8 +1,8 @@
 <?xml version='1.0' encoding='utf-8'?>
-<widget id="com.sonytaka32.shisuicalc" version="2.0.0" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
-  <name>Shisui Calc 2</name>
-  <description>Offline anime-inspired calculator with scientific functions and customizable Uchiha themes.</description>
-  <author email="sonytaka32-beep@users.noreply.github.com" href="https://github.com/sonytaka32-beep">Community modification based on Shisui Calc</author>
+<widget id="com.sonytaka32.shisuicalc" version="3.0.0" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
+  <name>Shisui Calc</name>
+  <description>Offline calculator with scientific functions and a locally bundled Shisui-inspired Susanoo visual theme.</description>
+  <author email="sonytaka32-beep@users.noreply.github.com" href="https://github.com/sonytaka32-beep">Community modification</author>
   <content src="index.html" />
   <access origin="https://*" />
   <access origin="http://localhost" />
@@ -13,7 +13,7 @@
   <platform name="android">
     <preference name="AndroidLaunchMode" value="singleTop" />
     <preference name="Fullscreen" value="false" />
-    <preference name="AndroidWindowSplashScreenBackground" value="#08070d" />
+    <preference name="AndroidWindowSplashScreenBackground" value="#08090b" />
     <preference name="AndroidInsecureFileModeEnabled" value="false" />
   </platform>
 </widget>

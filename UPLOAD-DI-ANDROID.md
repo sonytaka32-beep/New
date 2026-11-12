@@ -1,69 +1,38 @@
-# Panduan upload Shisui Calc 2.0 dari HP Android
+# Upload Shisui Calc 3.0 from Android
 
-## 1. Ekstrak ZIP
-1. Download `shisui-calc-v2-mobile.zip` ke HP.
-2. Buka ZArchiver atau pengelola file.
-3. Pilih ZIP lalu tekan **Ekstrak di sini**.
-4. Buka folder `shisui-calc-v2`. Di dalamnya harus ada `index.html`, `config.xml`, `package.json`, serta folder `css`, `js`, dan `.github`.
+## Option A — GitHub website
+1. Download `shisui-calc-v3-mobile.zip` and extract it with ZArchiver.
+2. Open your repository: https://github.com/sonytaka32-beep/New
+3. Open the `main` branch and choose **Add file → Upload files**.
+4. Select the contents of the extracted `shisui-calc-v3` folder, including the `assets` folder and `.github/workflows/build-apk.yml`.
+5. If Android's file picker hides `.github`, use Option B (Termux) so the workflow file is not missed.
+6. Commit the changes with a message such as `Upgrade Shisui Calc to 3.0 Susanoo Edition`.
 
-> Jangan upload ZIP sebagai isi repository. Yang di-upload adalah isi folder hasil ekstrak.
+Important: upload the extracted files and folders, not the ZIP itself. Keep the folder structure exactly as it is.
 
-## 2. Upload lewat browser GitHub
-1. Buka repository tujuan di github.com dan login.
-2. Pilih branch yang ingin diperbarui (biasanya `main`).
-3. Pilih **Add file → Upload files**.
-4. Pilih file-file dari folder hasil ekstrak. Jika pemilih file HP tidak bisa memilih folder sekaligus, gunakan Termux di bawah.
-5. Pastikan `.github/workflows/build-apk.yml` ikut ter-upload. Folder `.github` kadang tersembunyi di pengelola file.
-6. Isi commit message, misalnya `Update Shisui Calc to v2`, lalu tekan **Commit changes**.
-
-## 3. Cara praktis: Termux
-Install Termux dari sumber resminya, lalu jalankan:
+## Option B — Termux (recommended; includes hidden workflow folder)
+Install Termux, then:
 
 ```bash
 pkg update -y
-pkg install git openssh -y
+pkg install git unzip -y
 termux-setup-storage
-```
-
-Masuk ke folder Download:
-
-```bash
 cd ~/storage/downloads
-unzip shisui-calc-v2-mobile.zip
-```
-
-Clone repository milikmu (ganti USERNAME dan NAMA-REPO):
-
-```bash
-cd ~
-git clone https://github.com/USERNAME/NAMA-REPO.git
-```
-
-Salin isi proyek ke repository hasil clone:
-
-```bash
-cp -r ~/storage/downloads/shisui-calc-v2/. ~/NAMA-REPO/
-cd ~/NAMA-REPO
+unzip shisui-calc-v3-mobile.zip
+git clone https://github.com/sonytaka32-beep/New.git
+cd New
+cp -r ~/storage/downloads/shisui-calc-v3/. .
 git status
 git add .
-git commit -m "Update Shisui Calc to v2"
-git push
+git commit -m "Upgrade Shisui Calc to 3.0 Susanoo Edition"
+git push origin main
 ```
 
-Jika folder hasil ekstrak bukan di `~/storage/downloads`, sesuaikan path pada perintah `cp`. GitHub mungkin meminta autentikasi. Untuk HTTPS, gunakan GitHub Personal Access Token saat diminta password; jangan bagikan token kepada siapa pun.
+If the ZIP is saved outside Downloads, adjust the `cp` source path. If you already cloned `New`, skip `git clone` and `cd` into your existing repository. GitHub may ask you to authenticate; use a GitHub token when prompted for an HTTPS password and never share it.
 
-## 4. Periksa hasil upload
-Pastikan file berikut terlihat di GitHub:
-- `index.html`
-- `css/style.css`
-- `js/script.js`
-- `config.xml`
-- `package.json`
-- `.github/workflows/build-apk.yml`
+## Build the APK
+After the push, open the repository's **Actions** tab. Wait for `Build Shisui Calc 3 APK` to finish, then download the `shisui-calc-v3-debug-apk` artifact and extract the APK from it.
 
-Setelah itu buka tab **Actions** untuk melihat apakah workflow build APK berjalan.
+The workflow intentionally keeps the known successful versions: Ubuntu 22.04, Node 20, Java 17, Cordova 12.0.0, Android platform 13.0.0, SDK 34 and build-tools 34.0.0. It adds only one required copy command for the new local `assets/` directory. It does not copy the empty `res/*` directory that caused the earlier issue.
 
-## Catatan
-- Upload ke repository yang kamu miliki atau punya izin untuk mengubahnya.
-- Jika ingin mengganti proyek lama, periksa perubahan sebelum commit agar file penting yang masih dibutuhkan tidak terhapus.
-- Source code belum berarti APK sudah berhasil dibangun. Periksa hasil workflow di GitHub Actions.
+This package is source code; an APK is produced only after GitHub Actions completes successfully.

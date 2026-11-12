@@ -3,34 +3,51 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-  <meta name="theme-color" content="#08070d">
-  <meta name="description" content="Shisui Calc 2.0 — kalkulator anime offline dengan mode scientific, tema Uchiha, dan riwayat.">
-  <title>Shisui Calc 2.0</title>
+  <meta name="theme-color" content="#08090b">
+  <meta name="description" content="Shisui Calc 3.0 — kalkulator Uchiha offline dengan mode scientific, riwayat, dan visual Susanoo.">
+  <title>Shisui Calc · Susanoo Edition</title>
+  <link rel="preload" as="image" href="assets/shisui-susanoo.png">
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body data-theme="shisui">
   <div class="ambient ambient-a" aria-hidden="true"></div>
   <div class="ambient ambient-b" aria-hidden="true"></div>
-  <div class="particles" id="particles" aria-hidden="true"></div>
+  <div class="embers" id="particles" aria-hidden="true"></div>
+
   <header class="topbar">
-    <div class="brand"><span class="brand-mark">写</span><div><strong>SHISUI <span>CALC</span></strong><small>UCHIHA EDITION · 2.0</small></div></div>
+    <a class="brand" href="#" aria-label="Shisui Calc home">
+      <span class="brand-mark">写</span>
+      <span class="brand-copy"><strong>SHISUI <i>CALC</i></strong><small>UCHIHA · SUSANOO EDITION</small></span>
+    </a>
     <div class="top-actions">
-      <button class="icon-btn" id="soundBtn" aria-label="Suara aktif/nonaktif" title="Suara">♪</button>
+      <button class="icon-btn" id="soundBtn" aria-label="Suara aktif/nonaktif" title="Suara">♫</button>
       <button class="icon-btn" id="historyBtn" aria-label="Riwayat" title="Riwayat">◷</button>
       <button class="icon-btn" id="settingsBtn" aria-label="Pengaturan" title="Pengaturan">⚙</button>
     </div>
   </header>
 
   <main class="app-shell">
-    <section class="hero" aria-label="Mangekyou Sharingan">
-      <div class="eye eye-large" aria-hidden="true"><div class="eye-ring ring-one"></div><div class="eye-ring ring-two"></div><div class="eye-pupil"></div><i class="tomoe tomoe-one"></i><i class="tomoe tomoe-two"></i><i class="tomoe tomoe-three"></i></div>
-      <div class="hero-copy"><span class="eyebrow">火影 · WILL OF FIRE</span><h1>Focus your <em>power.</em></h1><p>Precision in every calculation.</p></div>
-      <div class="hero-status"><span class="status-dot"></span> OFFLINE READY</div>
+    <section class="hero" aria-label="Shisui Uchiha dan Susanoo">
+      <div class="hero-art-wrap">
+        <img class="hero-art" src="assets/shisui-susanoo.png" alt="Ilustrasi ninja Shisui dengan Susanoo hijau" fetchpriority="high">
+      </div>
+      <div class="hero-vignette" aria-hidden="true"></div>
+      <div class="hero-copy">
+        <span class="eyebrow"><b></b> 火影 · WILL OF FIRE</span>
+        <h1>Calculate with<br><em>the power of Uchiha.</em></h1>
+        <p>Precision forged in emerald chakra.</p>
+        <div class="hero-tags"><span>SHARINGAN</span><span>·</span><span>SUSANOO</span><span>·</span><span>OFFLINE</span></div>
+      </div>
+      <div class="hero-caption"><span>01 / SHISUI UCHIHA</span><span>EMERALD CHAKRA</span></div>
     </section>
 
     <section class="calculator" aria-label="Kalkulator">
-      <div class="calc-head"><span>CALCULATION TERMINAL</span><button id="scientificToggle" class="mode-chip" aria-pressed="false">SCI <span>OFF</span></button></div>
+      <div class="calc-head">
+        <div class="calc-title"><span class="live-dot"></span><span>CALCULATION TERMINAL</span></div>
+        <button id="scientificToggle" class="mode-chip" aria-pressed="false">SCI <span>OFF</span></button>
+      </div>
       <div class="display-wrap">
+        <div class="display-meta"><span>INPUT / OUTPUT</span><span id="angleMode">DEG</span></div>
         <div id="expression" class="expression" aria-live="polite">&nbsp;</div>
         <div id="display" class="display" aria-live="polite">0</div>
       </div>
@@ -46,8 +63,9 @@
         <button data-value="1">1</button><button data-value="2">2</button><button data-value="3">3</button><button data-value="+" class="operator">+</button>
         <button data-action="sign" class="utility">±</button><button data-value="0" class="zero">0</button><button data-value=".">.</button><button data-action="equals" class="equals">=</button>
       </div>
-      <div class="calc-foot"><span><i></i> LOCAL COMPUTATION</span><span id="angleMode">DEG</span></div>
+      <div class="calc-foot"><span><i></i> LOCAL COMPUTATION</span><span>NO NETWORK REQUIRED</span></div>
     </section>
+
     <footer class="footer"><span>SHISUI UCHIHA</span><span class="footer-symbol">卍</span><span>POWER · CONTROL · PRECISION</span></footer>
   </main>
 

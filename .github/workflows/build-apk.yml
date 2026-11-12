@@ -1,4 +1,4 @@
-name: Build Shisui Calc 2 APK
+name: Build Shisui Calc 3 APK
 on:
   push:
     branches: [main]
@@ -42,12 +42,13 @@ jobs:
       - name: Create Cordova project and build
         run: |
           # Create a fresh Cordova project
-          cordova create build com.sonytaka32.shisuicalc "Shisui Calc 2"
+          cordova create build com.sonytaka32.shisuicalc "Shisui Calc"
           cd build
           # Copy our www files
           cp ../index.html www/
           cp -r ../css www/
           cp -r ../js www/
+          cp -r ../assets www/
           # Copy config.xml (will override the default one)
           cp ../config.xml .
           # Add Android platform and build
@@ -57,6 +58,6 @@ jobs:
       - name: Upload debug APK
         uses: actions/upload-artifact@v4
         with:
-          name: shisui-calc-v2-debug-apk
+          name: shisui-calc-v3-debug-apk
           path: build/platforms/android/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
