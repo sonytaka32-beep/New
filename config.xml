@@ -11,6 +11,12 @@
   <allow-intent href="https://*" />
   <allow-intent href="mailto:*" />
   <platform name="android">
+    <icon src="res/icon/android/icon-36-ldpi.png" density="ldpi" />
+    <icon src="res/icon/android/icon-48-mdpi.png" density="mdpi" />
+    <icon src="res/icon/android/icon-72-hdpi.png" density="hdpi" />
+    <icon src="res/icon/android/icon-96-xhdpi.png" density="xhdpi" />
+    <icon src="res/icon/android/icon-144-xxhdpi.png" density="xxhdpi" />
+    <icon src="res/icon/android/icon-192-xxxhdpi.png" density="xxxhdpi" />
     <preference name="AndroidLaunchMode" value="singleTop" />
     <preference name="Fullscreen" value="false" />
     <preference name="AndroidWindowSplashScreenBackground" value="#08090b" />
